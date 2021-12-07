@@ -1,0 +1,8 @@
+pytorch-lightning
+jsonargparse[signatures]
+numpy
+Pillow
+pycocotools; platform_system == "Linux"
+pycocotools-windows; platform_system == "Windows"
+terminaltables
+scipy

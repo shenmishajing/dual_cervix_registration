@@ -48,7 +48,7 @@ data:
                 std: &import_norm_cfg_std [ 56.09214782714844, 55.104705810546875, 61.23152542114258 ]
                 to_rgb: true
             -   type: GenSegmentationFromBBox
-                num_classes: 2
+                num_classes: 1
             -   type: DefaultFormatBundle
             -   type: Collect
                 keys: [ img, gt_bboxes, gt_labels, gt_segments_from_bboxes ]
@@ -68,7 +68,7 @@ data:
                         std: *import_norm_cfg_std
                         to_rgb: true
                     -   type: GenSegmentationFromBBox
-                        num_classes: 2
+                        num_classes: 1
                     -   type: DefaultFormatBundle
                     -   type: Collect
                         keys: [ img, gt_bboxes, gt_labels, gt_segments_from_bboxes ]

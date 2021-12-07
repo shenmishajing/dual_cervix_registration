@@ -375,7 +375,7 @@ class VxmDense(LightningModule):
         loss['grad'] = self.loss_grad(res['preint_flow'])
         if 'y_seg' in res:
             loss['seg'] = torch.mean(torch.stack(
-                [self.loss_seg(res['y_seg'][i], batch[self.ModalDict['trg']]['gt_segments_from_bboxes'][i]) for i in
+                [self.loss_seg(res['y_seg'][i], batch[self.ModalDict['trg']]['gt_segments_from_bboxes'][i][None, ...]) for i in
                  range(len(res['y_seg']))]))
 
         # multi loss weights

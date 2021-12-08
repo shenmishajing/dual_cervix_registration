@@ -15,7 +15,7 @@ from .pipelines import Compose
 
 
 class DualCervixDataSet(CocoDataset):
-    CLASSES = ('hsil')
+    CLASSES = ('hsil',)
     Modals = ['acid', 'iodine']
 
     def __init__(self,

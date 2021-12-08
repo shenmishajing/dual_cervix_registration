@@ -354,9 +354,10 @@ class VxmDense(LightningModule):
         y_source = self.transformer(source, pos_flow)
         if 'gt_segments_from_bboxes' in batch[self.ModalDict['src']]:
             segments = batch[self.ModalDict['src']]['gt_segments_from_bboxes']
-            y_seg = []
-            for i in range(len(segments)):
-                y_seg.append(self.transformer(segments[i][None, ...], pos_flow[i, None, ...]))
+            if isinstance(segments, list):
+                y_seg = [self.transformer(segments[i][None, ...], pos_flow[i, None, ...]) for i in range(len(segments))]
+            else:
+                y_seg = self.transformer(segments, pos_flow)
         else:
             y_seg = None
         y_target = self.transformer(target, neg_flow) if self.bidir else None
@@ -374,9 +375,12 @@ class VxmDense(LightningModule):
         loss['img'] = self.loss_img(res['y_source'], batch[self.ModalDict['trg']]['img'])
         loss['grad'] = self.loss_grad(res['preint_flow'])
         if 'y_seg' in res:
-            loss['seg'] = torch.mean(torch.stack(
-                [self.loss_seg(res['y_seg'][i], batch[self.ModalDict['trg']]['gt_segments_from_bboxes'][i][None, ...]) for i in
-                 range(len(res['y_seg']))]))
+            if isinstance(res['y_seg'], list):
+                loss['seg'] = torch.mean(torch.stack(
+                    [self.loss_seg(res['y_seg'][i], batch[self.ModalDict['trg']]['gt_segments_from_bboxes'][i][None, ...]) for i in
+                     range(len(res['y_seg']))]))
+            else:
+                loss['seg'] = self.loss_seg(res['y_seg'], batch[self.ModalDict['trg']]['gt_segments_from_bboxes'])
 
         # multi loss weights
         loss = {k: v * (self.loss_config[k]['weight'] if 'weight' in self.loss_config[k] else 1) for k, v in loss.items()}

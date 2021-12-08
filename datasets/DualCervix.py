@@ -280,7 +280,12 @@ class DualCervixDataModule(LightningDataModule):
         res = {}
         for part in batch[0]:
             res[part] = {}
-            res[part]['img'] = torch.stack([x[part]['img'] for x in batch])
-            for key in [k for k in batch[0][part] if k not in ['img']]:
+            stack_keys = ['img', 'gt_segments_from_bboxes']
+            for key in [k for k in stack_keys if k in batch[0][part]]:
+                if isinstance(batch[0][part][key], torch.Tensor):
+                    res[part][key] = torch.stack([x[part][key] for x in batch])
+                else:
+                    res[part][key] = [x[part][key] for x in batch]
+            for key in [k for k in batch[0][part] if k not in stack_keys]:
                 res[part][key] = [x[part][key] for x in batch]
         return res

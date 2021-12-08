@@ -87,7 +87,7 @@ trainer:
         -   class_path: pytorch_lightning.callbacks.LearningRateMonitor
             init_args:
                 logging_interval: null
-                log_momentum: true
+                log_momentum: false
         -   class_path: utils.callbacks.wandb_logger_watch_model_callback.WandbLoggerWatchModelCallback
             init_args:
                 log: all

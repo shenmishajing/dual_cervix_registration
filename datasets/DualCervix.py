@@ -67,7 +67,9 @@ class DualCervixDataSet(CocoDataset):
             self._set_group_flag()
 
         # processing pipeline
-        self.pipeline = Compose(pipeline)
+        if not isinstance(pipeline, dict):
+            pipeline = {part: pipeline for part in self.Modals}
+        self.pipeline = {part: Compose(pipeline[part]) for part in self.Modals}
 
     def __len__(self):
         """Total number of samples of data."""
@@ -196,7 +198,7 @@ class DualCervixDataSet(CocoDataset):
             if self.proposals is not None:
                 results['proposals'] = self.proposals[idx]
             self.pre_pipeline(results)
-            res[part] = self.pipeline(results)
+            res[part] = self.pipeline[part](results)
         return res
 
     def prepare_test_img(self, idx):
@@ -218,20 +220,19 @@ class DualCervixDataSet(CocoDataset):
             if self.proposals is not None:
                 results['proposals'] = self.proposals[idx]
             self.pre_pipeline(results)
-            res[part] = self.pipeline(results)
+            res[part] = self.pipeline[part](results)
         return res
 
 
 class DualCervixDataModule(LightningDataModule):
     def __init__(self,
                  ann_path: str,
-                 train_pipeline: Sequence[Mapping[str, Any]],
-                 test_pipeline: Sequence[Mapping[str, Any]],
+                 train_pipeline: Mapping[str, Any],
+                 test_pipeline: Mapping[str, Any],
                  data_root: Optional[str] = '.',
                  img_prefix: Optional[str] = '',
                  seg_prefix: Optional[str] = '',
-                 batch_size: Optional[int] = 1,
-                 num_workers: Optional[int] = 1):
+                 data_loader_config: Optional[Mapping[str, Any]] = None):
         self.ann_path = ann_path
         self.train_pipeline = train_pipeline
         self.test_pipeline = test_pipeline
@@ -239,8 +240,15 @@ class DualCervixDataModule(LightningDataModule):
         self.img_prefix = img_prefix
         self.seg_prefix = seg_prefix
 
-        self.batch_size = batch_size
-        self.num_workers = num_workers
+        if data_loader_config is None:
+            self.data_loader_config = {
+                'batch_size': 1,
+                'num_workers': 1,
+                'drop_last': False
+            }
+        else:
+            self.data_loader_config = data_loader_config
+
         self.train_dataset = self.val_dataset = self.test_dataset = None
 
     def prepare_data(self) -> None:
@@ -271,9 +279,8 @@ class DualCervixDataModule(LightningDataModule):
     def __build_data_loader(self, dataset, shuffle: Optional[bool] = False) -> TRAIN_DATALOADERS:
         return DataLoader(dataset,
                           shuffle = shuffle,
-                          batch_size = self.batch_size,
-                          num_workers = self.num_workers,
-                          collate_fn = self.collate_fn)
+                          collate_fn = self.collate_fn,
+                          **self.data_loader_config)
 
     @staticmethod
     def collate_fn(batch):

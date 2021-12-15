@@ -56,7 +56,7 @@ class NCC(nn.Module):
         I_var = I2_sum / win_size - u_I * u_I
         J_var = J2_sum / win_size - u_J * u_J
 
-        cc = cross * cross / (I_var * J_var + 1e-5)
+        cc = cross / torch.sqrt(torch.clamp(I_var * J_var, min = 1e-5))
 
         return 1 - torch.mean(cc)
 
@@ -103,7 +103,7 @@ class Grad(nn.Module):
                        self.penalty)
         dy = torch.pow(torch.abs(F.conv2d(y_pred, self.kernel_y[None, None, ...].repeat(1, y_pred.shape[1], 1, 1), padding = 1)),
                        self.penalty)
-        grad = torch.mean(torch.pow(dx + dy + 1e-7, 1 / self.penalty))
+        grad = torch.mean(torch.pow(dx + dy + 1e-5, 1 / self.penalty))
 
         if self.loss_mult is not None:
             grad *= self.loss_mult

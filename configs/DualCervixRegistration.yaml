@@ -136,7 +136,7 @@ data:
                         -   type: Collect
                             keys: [ img, gt_bboxes, gt_labels, gt_segments_from_bboxes ]
         data_root: data/DualCervixDetection
-        ann_path: cropped_ann
+        ann_path: cropped_annos
         img_prefix: cropped_img
         data_loader_config:
             batch_size: 8

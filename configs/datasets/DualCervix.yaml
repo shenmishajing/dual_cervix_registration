@@ -1,0 +1,118 @@
+# img mean info
+#############
+# before crop
+#############
+# all
+# mean: &import_norm_cfg_mean [ 79.2785873413086, 95.04068756103516, 138.40469360351562 ]
+# std: &import_norm_cfg_std [ 56.09214782714844, 55.104705810546875, 61.23152542114258 ]
+# acid
+# mean: &import_acid_norm_cfg_mean [ 97.57475280761719, 102.059326171875, 143.3719024658203 ]
+# std: &import_acid_norm_cfg_std [ 45.371376037597656, 43.705657958984375, 51.12405776977539 ]
+# iodine
+# mean: &import_iodine_norm_cfg_mean [ 60.97126388549805, 87.94377136230469, 133.1758270263672 ]
+# std: &import_iodine_norm_cfg_std [ 59.728607177734375, 63.77861404418945, 69.6864013671875 ]
+#############
+# after crop
+#############
+# all
+# mean: &import_norm_cfg_mean [ 75.73311614990234, 89.88715362548828, 140.6180419921875 ]
+# std: &import_norm_cfg_std [ 14.991394996643066, 16.072477340698242, 29.735885620117188 ]
+# acid
+# mean: &import_acid_norm_cfg_mean [ 107.5614013671875, 108.2771987915039, 157.57847595214844]
+# std: &import_acid_norm_cfg_std [ 15.73247241973877, 13.8170747756958, 24.39257049560547 ]
+# iodine
+# mean: &import_iodine_norm_cfg_mean [ 43.90464401245117, 71.49726867675781, 123.6583023071289]
+# std: &import_iodine_norm_cfg_std [ 14.21172046661377, 18.04821014404297, 34.25565719604492 ]
+data:
+    class_path: datasets.DualCervix.DualCervixDataModule
+    init_args:
+        train_pipeline:
+            acid:
+                -   type: LoadImageFromFile
+                -   type: LoadAnnotations
+                    with_bbox: true
+                -   type: Resize
+                    img_scale: &import_img_scale [ 608, 608 ]
+                    keep_ratio: false
+                -   type: Pad
+                    size_divisor: 32
+                -   type: RandomFlip
+                    flip_ratio: 0.5
+                -   type: Normalize
+                    mean: &import_acid_norm_cfg_mean [ 107.5614013671875, 108.2771987915039, 157.57847595214844 ]
+                    std: &import_acid_norm_cfg_std [ 15.73247241973877, 13.8170747756958, 24.39257049560547 ]
+                    to_rgb: true
+                -   type: GenSegmentationFromBBox
+                    num_classes: 1
+                -   type: DefaultFormatBundle
+                -   type: Collect
+                    keys: [ img, gt_bboxes, gt_labels, gt_segments_from_bboxes ]
+            iodine:
+                -   type: LoadImageFromFile
+                -   type: LoadAnnotations
+                    with_bbox: true
+                -   type: Resize
+                    img_scale: *import_img_scale
+                    keep_ratio: false
+                -   type: Pad
+                    size_divisor: 32
+                -   type: RandomFlip
+                    flip_ratio: 0.5
+                -   type: Normalize
+                    mean: &import_iodine_norm_cfg_mean [ 43.90464401245117, 71.49726867675781, 123.6583023071289 ]
+                    std: &import_iodine_norm_cfg_std [ 14.21172046661377, 18.04821014404297, 34.25565719604492 ]
+                    to_rgb: true
+                -   type: GenSegmentationFromBBox
+                    num_classes: 1
+                -   type: DefaultFormatBundle
+                -   type: Collect
+                    keys: [ img, gt_bboxes, gt_labels, gt_segments_from_bboxes ]
+        test_pipeline:
+            acid:
+                -   type: LoadImageFromFile
+                -   type: MultiScaleFlipAug
+                    img_scale: *import_img_scale
+                    flip: false
+                    transforms:
+                        -   type: Resize
+                            keep_ratio: false
+                        -   type: Pad
+                            size_divisor: 32
+                        -   type: RandomFlip
+                        -   type: Normalize
+                            mean: *import_acid_norm_cfg_mean
+                            std: *import_acid_norm_cfg_std
+                            to_rgb: true
+                        -   type: GenSegmentationFromBBox
+                            num_classes: 1
+                        -   type: DefaultFormatBundle
+                        -   type: Collect
+                            keys: [ img, gt_bboxes, gt_labels, gt_segments_from_bboxes ]
+            iodine:
+                -   type: LoadImageFromFile
+                -   type: MultiScaleFlipAug
+                    img_scale: *import_img_scale
+                    flip: false
+                    transforms:
+                        -   type: Resize
+                            keep_ratio: false
+                        -   type: Pad
+                            size_divisor: 32
+                        -   type: RandomFlip
+                        -   type: Normalize
+                            mean: *import_iodine_norm_cfg_mean
+                            std: *import_iodine_norm_cfg_std
+                            to_rgb: true
+                        -   type: GenSegmentationFromBBox
+                            num_classes: 1
+                        -   type: DefaultFormatBundle
+                        -   type: Collect
+                            keys: [ img, gt_bboxes, gt_labels, gt_segments_from_bboxes ]
+        data_root: data/DualCervixDetection
+        ann_path: cropped_annos
+        img_prefix: cropped_img
+        data_loader_config:
+            batch_size: 32
+            num_workers: 8
+            prefetch_factor: 2
+            drop_last: true

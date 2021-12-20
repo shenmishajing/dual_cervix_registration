@@ -1,0 +1,60 @@
+model:
+    class_path: models.model.networks.VxmDense
+    init_args:
+        inshape: [ 608, 608 ]
+        src_feats: 3
+        trg_feats: 3
+        loss_config:
+            img:
+                type: NCC
+                weight: 10.0
+            grad:
+                type: Grad
+                param:
+                    penalty: 2
+                weight: 100.0
+            seg:
+                type: Dice
+                weight: 1.0
+        optimizer_config:
+            optimizer:
+                type: AdamW
+                lr: 1.0e-3
+                weight_decay: 0.01
+            lr_scheduler:
+                scheduler:
+                    type: ReduceLROnPlateau
+                    mode: min
+                    factor: 0.1
+                    patience: 5
+                    cooldown: 2
+                monitor: train/loss
+                warmup_config:
+                    warmup_iters: 500
+data:
+    class_path: datasets.DualCervix.DualCervixDataModule
+    init_args:
+        data_loader_config:
+            batch_size: 32
+            num_workers: 8
+            prefetch_factor: 2
+            drop_last: true
+trainer:
+    # debug
+    limit_train_batches: 1.0
+    limit_val_batches: 1.0
+    limit_test_batches: 1.0
+    limit_predict_batches: 1.0
+    fast_dev_run: false
+    overfit_batches: 0.0
+    # train
+    max_epochs: null
+    min_epochs: null
+    max_steps: -1
+    min_steps: null
+    max_time: null
+    # gradient clip
+    gradient_clip_val: null
+    gradient_clip_algorithm: null
+# check point
+ckpt_path: null

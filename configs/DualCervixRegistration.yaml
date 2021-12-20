@@ -1,5 +1,5 @@
 model:
-    class_path: models.networks.VxmDense
+    class_path: models.model.networks.VxmDense
     init_args:
         inshape: [ 608, 608 ]
         src_feats: 3
@@ -9,15 +9,18 @@ model:
                 type: NCC
                 weight: 10.0
             grad:
-                type: 2
+                type: Grad
+                param:
+                    penalty: 2
                 weight: 100.0
             seg:
+                type: Dice
                 weight: 1.0
         optimizer_config:
             optimizer:
-                type: Adam
-                lr: 3.0e-3
-                weight_decay: 0.0001
+                type: AdamW
+                lr: 1.0e-3
+                weight_decay: 0.01
             lr_scheduler:
                 scheduler:
                     type: ReduceLROnPlateau
@@ -26,6 +29,8 @@ model:
                     patience: 5
                     cooldown: 2
                 monitor: train/loss
+                warmup_config:
+                    warmup_iters: 500
 data:
     class_path: datasets.DualCervix.DualCervixDataModule
     init_args:
@@ -139,7 +144,7 @@ data:
         ann_path: cropped_annos
         img_prefix: cropped_img
         data_loader_config:
-            batch_size: 8
+            batch_size: 32
             num_workers: 8
             prefetch_factor: 2
             drop_last: true
@@ -151,22 +156,26 @@ trainer:
             project: dual_cervix_registration
             offline: false
     callbacks:
-        -   class_path: pytorch_lightning.callbacks.LearningRateMonitor
+        -   class_path: utils.callbacks.lr_monitor.LearningRateMonitor
             init_args:
                 logging_interval: null
                 log_momentum: false
+                name_prefix: lr/
         -   class_path: utils.callbacks.wandb_logger_watch_model_callback.WandbLoggerWatchModelCallback
             init_args:
                 log: all
+                log_freq: 50
                 log_graph: true
         -   class_path: utils.progress.rich_progress.RichDefaultThemeProgressBar
+            init_args:
+                show_version: true
         -   class_path: pytorch_lightning.callbacks.RichModelSummary
             init_args:
                 max_depth: 2
         -   class_path: pytorch_lightning.callbacks.ModelCheckpoint
             init_args:
                 monitor: val/loss
-                filename: 'epoch={epoch}-val_loss={val/loss}'
+                filename: 'epoch:{epoch}-val_loss:{val/loss:.4g}'
                 save_top_k: 3
                 save_last: true
                 mode: min

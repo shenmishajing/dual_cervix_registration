@@ -1,10 +1,10 @@
 import numpy as np
 import torch
 import torch.nn as nn
-from torch import optim
 from torch.distributions.normal import Normal
-from pytorch_lightning import LightningModule
-from . import layers, losses
+from models.model.base import LightningModule
+from models import loss
+from models.model import layers
 
 from typing import Sequence, Optional, Union, Mapping, Any
 
@@ -190,7 +190,7 @@ class VxmDense(LightningModule):
                  trg_feats: Optional[int] = 1,
                  unet_half_res: Optional[bool] = False,
                  loss_config: Optional[Mapping[str, Any]] = None,
-                 optimizer_config: Optional[Union[Sequence[Mapping[str, Any]], Mapping[str, Any]]] = None):
+                 optimizer_config: Optional[Mapping[str, Any]] = None):
         """ 
         Parameters:
             inshape: Input shape. e.g. (192, 192, 192)
@@ -214,7 +214,8 @@ class VxmDense(LightningModule):
             unet_half_res: Skip the last unet decoder upsampling. Requires that int_downsize=2. 
                 Default is False.
         """
-        super().__init__()
+        self.int_downsize = int_downsize
+        super().__init__(loss_config = loss_config, optimizer_config = optimizer_config)
 
         # internal flag indicating whether to return flow or integrated warp during inference
         self.training = True
@@ -269,56 +270,11 @@ class VxmDense(LightningModule):
         # configure transformer
         self.transformer = layers.SpatialTransformer(inshape)
 
-        self.loss_config = loss_config
-        self.loss_img = losses.__dict__[self.loss_config['img']['type']]()
-        self.loss_grad = losses.Grad(self.loss_config['grad']['type'], int_downsize)
-        self.loss_seg = losses.Dice()
+    def _build_loss(self, cls_type, **kwargs):
+        return loss.__dict__[cls_type](**kwargs)
 
-        self.optimizer_config = optimizer_config if isinstance(optimizer_config, list) else [optimizer_config]
-        if len(self.optimizer_config) == 1 and 'lr' in self.optimizer_config[0]['optimizer']:
-            self.lr = self.optimizer_config[0]['optimizer']['lr']
-
-    def __construct_optimizer(self, optimizer, set_lr = False):
-        """
-        Constructs the optimizer.
-
-        Args:
-            optimizer: dictionary containing optimizer configuration.
-        """
-        optimizer_type = optimizer.pop('type')
-        if hasattr(self, 'lr') and self.lr is not None and set_lr:
-            optimizer['lr'] = self.lr
-        optimizer = optim.__dict__[optimizer_type](self.parameters(), **optimizer)
-
-        return optimizer
-
-    @staticmethod
-    def __construct_lr_scheduler(optimizer, lr_scheduler):
-        """
-        Constructs the lr_scheduler.
-
-        Args:
-            optimizer: the optimizer used to construct the lr_scheduler.
-            lr_scheduler: dictionary containing lr_scheduler configuration.
-        """
-        lr_scheduler_type = lr_scheduler.pop('type')
-        lr_scheduler = optim.lr_scheduler.__dict__[lr_scheduler_type](optimizer, **lr_scheduler)
-
-        return lr_scheduler
-
-    def configure_optimizers(self):
-        """
-        Configure optimizers for model.
-        """
-        optimizer_configs = self.optimizer_config.copy()
-        for idx, optimizer_config in enumerate(optimizer_configs):
-            if 'optimizer' in optimizer_config:
-                optimizer_config['optimizer'] = self.__construct_optimizer(optimizer_config['optimizer'], set_lr = idx == 0)
-            if 'lr_scheduler' in optimizer_config and 'scheduler' in optimizer_config['lr_scheduler']:
-                optimizer_config['lr_scheduler']['scheduler'] = self.__construct_lr_scheduler(optimizer_configs[idx]['optimizer'],
-                                                                                              optimizer_config['lr_scheduler']['scheduler'])
-
-        return optimizer_configs
+    def _build_loss_grad(self, cls_type, **kwargs):
+        return loss.__dict__[cls_type](loss_mult = self.int_downsize, **kwargs)
 
     def forward(self, batch):
         # concatenate inputs and propagate unet
@@ -370,7 +326,7 @@ class VxmDense(LightningModule):
 
         return res
 
-    def loss_step(self, batch, res, prefix = 'train'):
+    def _loss_step(self, batch, res, prefix = 'train'):
         loss = {}
         loss['img'] = self.loss_img(res['y_source'], batch[self.ModalDict['trg']]['img'])
         loss['grad'] = self.loss_grad(res['preint_flow'])
@@ -381,15 +337,6 @@ class VxmDense(LightningModule):
                      range(len(res['y_seg']))]))
             else:
                 loss['seg'] = self.loss_seg(res['y_seg'], batch[self.ModalDict['trg']]['gt_segments_from_bboxes'])
-
-        # multi loss weights
-        loss = {k: v * (self.loss_config[k]['weight'] if 'weight' in self.loss_config[k] else 1) for k, v in loss.items()}
-
-        # calculate loss
-        loss['loss'] = torch.sum(torch.stack([v for v in loss.values()]))
-
-        # add prefix
-        loss = {(f'{prefix}/' if prefix is not None else '') + ('loss_' if 'loss' not in k else '') + k: v for k, v in loss.items()}
 
         return loss
 

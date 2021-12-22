@@ -3,13 +3,29 @@ from pytorch_lightning.utilities import _JSONARGPARSE_AVAILABLE
 from pytorch_lightning.utilities.cli import LightningCLI, LightningArgumentParser, SaveConfigCallback, DATAMODULE_REGISTRY
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
 from jsonargparse import ActionConfigFile as _ActionConfigFile
-from jsonargparse import get_config_read_mode, Path, Namespace
+from jsonargparse import get_config_read_mode, Path
 from jsonargparse.actions import _ActionSubCommands
 from jsonargparse.loaders_dumpers import load_value, get_loader_exceptions
 
 from utils.callbacks.save_and_log_config_callback import SaveAndLogConfigCallback
 
 DATAMODULE_REGISTRY(object)
+
+
+def deep_update(source, overrides):
+    """
+    Update a nested dictionary or similar mapping.
+    Modify ``source`` in place.
+    """
+    if isinstance(source, Dict) and isinstance(overrides, Dict):
+        for key, value in overrides.items():
+            if isinstance(value, Dict) and key in source:
+                source[key] = deep_update(source[key], value)
+            else:
+                source[key] = overrides[key]
+        return source
+    else:
+        return overrides
 
 
 def parse_config(parser, cfg_path, seen_cfg = None, **kwargs):
@@ -30,11 +46,12 @@ def parse_config(parser, cfg_path, seen_cfg = None, **kwargs):
         if sub_cfg_paths is not None:
             if not isinstance(sub_cfg_paths, list):
                 sub_cfg_paths = [sub_cfg_paths]
-            sub_cfg_paths = [os.path.join(os.path.dirname(cfg_path), sub_cfg_path) for sub_cfg_path in sub_cfg_paths]
-            sub_cfg_file = Namespace()
+            sub_cfg_paths = [os.path.join(os.path.dirname(cfg_path), sub_cfg_path) if not sub_cfg_path.startswith('/') else sub_cfg_path for
+                             sub_cfg_path in sub_cfg_paths]
+            sub_cfg_file = {}
             for sub_cfg_path in sub_cfg_paths:
-                sub_cfg_file.update(parse_config(parser, sub_cfg_path, seen_cfg = seen_cfg, **kwargs))
-            cfg_file.update(sub_cfg_file)
+                sub_cfg_file = deep_update(sub_cfg_file, parse_config(parser, sub_cfg_path, seen_cfg = seen_cfg, **kwargs).as_dict())
+            cfg_file = parser._apply_actions(deep_update(sub_cfg_file, cfg_file.as_dict()))
 
     if '__import__' in cfg_file:
         cfg_file.pop('__import__')

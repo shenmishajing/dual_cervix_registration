@@ -16,8 +16,9 @@ def main():
     device = 'cpu'
     dataset = DualCervixDataSet(
         pipeline = [
-            dict(type = 'LoadImageFromFile'),
-            dict(type = 'Resize', img_scale = (900, 600), keep_ratio = False),
+            dict(type = 'LoadImageFromFile',
+                 color_type = 'grayscale'),
+            dict(type = 'Resize', img_scale = (608, 608), keep_ratio = False),
         ],
         data_root = 'data/DualCervixDetection',
         ann_file = os.path.join('cropped_annos', 'train_{part}.json'),

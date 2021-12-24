@@ -1,3 +1,7 @@
+import os
+import shutil
+
+import cv2
 import numpy as np
 import torch
 import torch.nn as nn
@@ -340,12 +344,6 @@ class VxmDense(LightningModule):
 
         return loss
 
-    def training_step(self, batch, batch_idx):
-        res = self(batch)
-        loss = self.loss_step(batch, res, 'train')
-        self.log_dict(loss)
-        return loss['train/loss']
-
     def validation_step(self, batch, batch_idx):
         res = self(batch)
         loss = self.loss_step(batch, res, 'val')
@@ -357,3 +355,29 @@ class VxmDense(LightningModule):
         loss = self.loss_step(batch, res, 'test')
         self.log_dict(loss)
         return loss
+
+    def on_predict_start(self) -> None:
+        self.norm_cfg = {
+            'acid': {'mean': [122.95729064941406], 'std': [15.282942771911621]},
+            'iodine': {'mean': [83.96733856201172], 'std': [20.51559829711914]},
+        }
+        for part in self.norm_cfg:
+            for k in self.norm_cfg[part]:
+                self.norm_cfg[part][k] = torch.tensor(self.norm_cfg[part][k]).to(self.device)[None, :, None, None]
+        self.output_path = '/data/zhengwenhao/Result/image_registration/dual_cervix_registration/visualization'
+        if os.path.exists(self.output_path):
+            shutil.rmtree(self.output_path)
+        os.makedirs(self.output_path)
+
+    def predict_step(self, batch: Any, batch_idx: int, **kwargs) -> Any:
+        res = self(batch)
+        res_img = {}
+        for part in self.ModalDict.values():
+            res_img[part] = batch[part]['img'] * self.norm_cfg[part]['std'] + self.norm_cfg[part]['mean']
+        res_img['res'] = res['y_source'] * self.norm_cfg[self.ModalDict['trg']]['std'] + self.norm_cfg[self.ModalDict['trg']]['mean']
+        res_img = torch.cat([res_img[self.ModalDict['src']], res_img['res'], res_img[self.ModalDict['trg']]], dim = -1)
+        res_img = res_img.add_(0.5).clamp_(0, 255).permute(0, 2, 3, 1).to('cpu', torch.uint8).numpy()
+        for i in range(res_img.shape[0]):
+            cur_name = batch['acid']['img_metas'][i]['ori_filename'].removesuffix('_2.jpg') + '.png'
+            cv2.imwrite(os.path.join(self.output_path, cur_name), res_img[i])
+        return res_img

@@ -22,7 +22,7 @@ trainer:
         -   class_path: pytorch_lightning.callbacks.RichModelSummary
             init_args:
                 max_depth: 2
-        -   class_path: pytorch_lightning.callbacks.ModelCheckpoint
+        -   class_path: utils.callbacks.model_checkpoint.ModelCheckpointWithSymlink
             init_args:
                 monitor: val/loss
                 filename: 'epoch:{epoch}-val_loss:{val/loss:.4g}'

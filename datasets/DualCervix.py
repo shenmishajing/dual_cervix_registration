@@ -3,15 +3,13 @@ import os.path as osp
 import numpy as np
 
 import torch
-from torch.utils.data import DataLoader
 
-from pytorch_lightning.core.datamodule import LightningDataModule
-from typing import Optional, Mapping, Sequence, Any
-from pytorch_lightning.utilities.types import EVAL_DATALOADERS, TRAIN_DATALOADERS
+from typing import Optional, Mapping, Any
 
 from .coco import CocoDataset
 from .api_wrappers import COCO
 from .pipelines import Compose
+from .base import LightningDataModule
 
 
 class DualCervixDataSet(CocoDataset):
@@ -233,6 +231,7 @@ class DualCervixDataModule(LightningDataModule):
                  img_prefix: Optional[str] = '',
                  seg_prefix: Optional[str] = '',
                  data_loader_config: Optional[Mapping[str, Any]] = None):
+        super().__init__(data_loader_config)
         self.ann_path = ann_path
         self.train_pipeline = train_pipeline
         self.test_pipeline = test_pipeline
@@ -240,47 +239,13 @@ class DualCervixDataModule(LightningDataModule):
         self.img_prefix = img_prefix
         self.seg_prefix = seg_prefix
 
-        if data_loader_config is None:
-            self.data_loader_config = {
-                'batch_size': 1,
-                'num_workers': 1,
-                'drop_last': False
-            }
-        else:
-            self.data_loader_config = data_loader_config
-
-        self.train_dataset = self.val_dataset = self.test_dataset = None
-
-    def prepare_data(self) -> None:
-        self.train_dataset = self.__build_data_set('train')
-        self.val_dataset = self.__build_data_set('val')
-        self.test_dataset = self.__build_data_set('test')
-
-    def train_dataloader(self) -> TRAIN_DATALOADERS:
-        return self.__build_data_loader(self.train_dataset, shuffle = True)
-
-    def val_dataloader(self) -> EVAL_DATALOADERS:
-        return self.__build_data_loader(self.val_dataset)
-
-    def test_dataloader(self) -> EVAL_DATALOADERS:
-        return self.__build_data_loader(self.test_dataset)
-
-    def predict_dataloader(self) -> EVAL_DATALOADERS:
-        return self.__build_data_loader(self.test_dataset)
-
-    def __build_data_set(self, split):
+    def _build_data_set(self, split):
         return DualCervixDataSet(ann_file = os.path.join(self.ann_path, split + '_{part}.json'),
                                  pipeline = self.train_pipeline,
                                  # pipeline = self.train_pipeline if split == 'train' else self.test_pipeline,
                                  data_root = self.data_root,
                                  img_prefix = self.img_prefix,
                                  seg_prefix = self.seg_prefix)
-
-    def __build_data_loader(self, dataset, shuffle: Optional[bool] = False) -> TRAIN_DATALOADERS:
-        return DataLoader(dataset,
-                          shuffle = shuffle,
-                          collate_fn = self.collate_fn,
-                          **self.data_loader_config)
 
     @staticmethod
     def collate_fn(batch):

@@ -19,10 +19,12 @@ class LightningDataModule(_LightningDataModule):
         self.train_dataset = self.val_dataset = self.test_dataset = None
 
     def setup(self, stage: Optional[str] = None) -> None:
+        if self.trainer.overfit_batches > 0:
+            self.train_dataset = self._build_data_set('train')
+            return
         if stage in [None, 'fit']:
             self.train_dataset = self._build_data_set('train')
-            self.val_dataset = self._build_data_set('val')
-        if stage in ['validate']:
+        if stage in [None, 'fit', 'validate']:
             self.val_dataset = self._build_data_set('val')
         if stage in [None, 'test', 'predict']:
             self.test_dataset = self._build_data_set('test')

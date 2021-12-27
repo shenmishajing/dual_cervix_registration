@@ -130,10 +130,11 @@ class LightningModule(_LightningModule):
     def _loss_step(self, batch, res, prefix = 'train'):
         raise NotImplementedError
 
-    def loss_step(self, batch, res, prefix = 'train'):
+    def loss_step(self, batch, res, prefix = 'train', use_loss_weight = True):
         loss = self._loss_step(batch, res, prefix)
         # multi loss weights
-        loss = {k: v * self.loss_weight[k] for k, v in loss.items()}
+        if use_loss_weight:
+            loss = {k: v * self.loss_weight[k] for k, v in loss.items()}
         # calculate loss
         loss['loss'] = torch.sum(torch.stack([v for v in loss.values()]))
         # add prefix

@@ -346,13 +346,13 @@ class VxmDense(LightningModule):
 
     def validation_step(self, batch, batch_idx):
         res = self(batch)
-        loss = self.loss_step(batch, res, 'val')
+        loss = self.loss_step(batch, res, 'val', use_loss_weight = False)
         self.log_dict(loss)
         return loss
 
     def test_step(self, batch, batch_idx):
         res = self(batch)
-        loss = self.loss_step(batch, res, 'test')
+        loss = self.loss_step(batch, res, 'test', use_loss_weight = False)
         self.log_dict(loss)
         return loss
 

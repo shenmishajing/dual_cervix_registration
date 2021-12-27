@@ -6,22 +6,25 @@ trainer:
             project: dual_cervix_registration
             offline: false
     callbacks:
-        -   class_path: utils.callbacks.lr_monitor.LearningRateMonitor
-            init_args:
-                logging_interval: null
-                log_momentum: false
-                name_prefix: lr/
-        -   class_path: utils.callbacks.wandb_logger_watch_model_callback.WandbLoggerWatchModelCallback
-            init_args:
-                log: all
-                log_freq: 50
-                log_graph: true
         -   class_path: utils.progress.rich_progress.RichDefaultThemeProgressBar
             init_args:
                 show_version: true
         -   class_path: pytorch_lightning.callbacks.RichModelSummary
             init_args:
                 max_depth: 2
+        -   class_path: utils.callbacks.set_sharing_strategy_callback.SetSharingStrategyCallback
+            init_args:
+                strategy: file_descriptor
+        -   class_path: utils.callbacks.wandb_logger_watch_model_callback.WandbLoggerWatchModelCallback
+            init_args:
+                log: all
+                log_freq: 50
+                log_graph: true
+        -   class_path: utils.callbacks.lr_monitor.LearningRateMonitor
+            init_args:
+                logging_interval: null
+                log_momentum: false
+                name_prefix: lr/
         -   class_path: utils.callbacks.model_checkpoint.ModelCheckpointWithSymlink
             init_args:
                 monitor: val/loss

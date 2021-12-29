@@ -1,0 +1,51 @@
+model:
+    class_path: models.models.vxm_dense.VxmDense
+    init_args:
+        backbone:
+            class_path: models.models.deeplabv3.DeepLabV3
+            init_args:
+                backbone:
+                    class_path: torchvision.models._utils.IntermediateLayerGetter
+                    init_args:
+                        model:
+                            class_path: models.backbones.resnet.ResNet
+                            init_args:
+                                depth: 50
+                                inplanes: 2
+                        return_layers:
+                            layer4: out
+                            layer3: aux
+                classifier:
+                    class_path: torchvision.models.segmentation.deeplabv3.DeepLabHead
+                    init_args:
+                        in_channels: 2048
+                        num_classes: 16
+        inshape: [ 608, 608 ]
+        final_nf: 16
+        loss_config:
+            img:
+                type: NCC
+                weight: 1.0
+            grad:
+                type: Grad
+                param:
+                    penalty: 2
+                weight: 1.0
+            seg:
+                type: Dice
+                weight: 1.0
+        optimizer_config:
+            optimizer:
+                type: AdamW
+                lr: 1.0e-3
+                weight_decay: 0.01
+            lr_scheduler:
+                scheduler:
+                    type: ReduceLROnPlateau
+                    mode: min
+                    factor: 0.1
+                    patience: 5
+                    cooldown: 2
+                monitor: train/loss
+                warmup_config:
+                    warmup_iters: 500

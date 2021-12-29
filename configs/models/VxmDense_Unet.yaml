@@ -1,9 +1,13 @@
 model:
-    class_path: models.model.networks.VxmDense
+    class_path: models.models.vxm_dense.VxmDense
     init_args:
+        backbone:
+            class_path: models.backbones.Unet.Unet
+            init_args:
+                inshape: [ 608, 608 ]
+                infeats: 2
         inshape: [ 608, 608 ]
-        src_feats: 1
-        trg_feats: 1
+        final_nf: 16
         loss_config:
             img:
                 type: NCC

@@ -5,6 +5,8 @@ from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.utilities.cloud_io import get_filesystem
 from pytorch_lightning.utilities.cli import SaveConfigCallback
 
+from ..utils import get_log_dir
+
 
 class SaveAndLogConfigCallback(SaveConfigCallback):
     """Saves and logs a LightningCLI config to the log_dir when training starts."""
@@ -15,25 +17,7 @@ class SaveAndLogConfigCallback(SaveConfigCallback):
         if trainer.logger is not None:
             trainer.logger.log_hyperparams(self.config[self.config['subcommand']])
 
-        if trainer.checkpoint_callback.dirpath is not None:
-            log_dir = trainer.checkpoint_callback.dirpath
-        else:
-            if trainer.logger is not None:
-                if trainer.weights_save_path != trainer.default_root_dir:
-                    # the user has changed weights_save_path, it overrides anything
-                    save_dir = trainer.weights_save_path
-                else:
-                    save_dir = trainer.logger.save_dir or trainer.default_root_dir
-
-                version = (
-                    trainer.logger.version
-                    if isinstance(trainer.logger.version, str)
-                    else f"version_{trainer.logger.version}"
-                )
-                log_dir = os.path.join(save_dir, str(trainer.logger.name), version)
-            else:
-                log_dir = trainer.weights_save_path
-
+        log_dir = get_log_dir(trainer)
         assert log_dir is not None
         config_path = os.path.join(log_dir, self.config_filename)
         if not self.overwrite and os.path.isfile(config_path):

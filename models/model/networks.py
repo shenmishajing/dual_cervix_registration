@@ -11,6 +11,7 @@ from models import loss
 from models.model import layers
 
 from typing import Sequence, Optional, Union, Mapping, Any
+from utils import get_log_dir
 
 
 def default_unet_features():
@@ -364,7 +365,9 @@ class VxmDense(LightningModule):
         for part in self.norm_cfg:
             for k in self.norm_cfg[part]:
                 self.norm_cfg[part][k] = torch.tensor(self.norm_cfg[part][k]).to(self.device)[None, :, None, None]
-        self.output_path = '/data/zhengwenhao/Result/image_registration/dual_cervix_registration/visualization'
+
+        log_dir = get_log_dir(self.trainer)
+        self.output_path = os.path.join(log_dir, 'visualization')
         if os.path.exists(self.output_path):
             shutil.rmtree(self.output_path)
         os.makedirs(self.output_path)

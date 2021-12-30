@@ -70,7 +70,5 @@ trainer:
     flush_logs_every_n_steps: null
     log_every_n_steps: 50
     track_grad_norm: -1
-# check point
-ckpt_path: null
 # seed
 seed_everything: null

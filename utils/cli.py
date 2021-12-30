@@ -28,7 +28,7 @@ def deep_update(source, overrides):
         return overrides
 
 
-def parse_config(parser, cfg_file, cfg_path = None, **kwargs):
+def parse_dict_config(parser, cfg_file, cfg_path = None, **kwargs):
     if '__base__' in cfg_file:
         sub_cfg_paths = cfg_file.pop('__base__')
         if sub_cfg_paths is not None:
@@ -39,11 +39,18 @@ def parse_config(parser, cfg_file, cfg_path = None, **kwargs):
             sub_cfg_file = {}
             for sub_cfg_path in sub_cfg_paths:
                 sub_cfg_file = deep_update(sub_cfg_file, parse_path(parser, sub_cfg_path, **kwargs).as_dict())
-            cfg_file = parser._apply_actions(deep_update(sub_cfg_file, cfg_file.as_dict()))
-
+            cfg_file = deep_update(sub_cfg_file, cfg_file)
     if '__import__' in cfg_file:
         cfg_file.pop('__import__')
+
+    for k, v in cfg_file.items():
+        if isinstance(v, dict):
+            cfg_file[k] = parse_dict_config(parser, v, cfg_path, **kwargs)
     return cfg_file
+
+
+def parse_config(parser, cfg_file, cfg_path = None, **kwargs):
+    return parser._apply_actions(parse_dict_config(parser, cfg_file.as_dict(), cfg_path, **kwargs))
 
 
 def parse_path(parser, cfg_path, seen_cfg = None, **kwargs):

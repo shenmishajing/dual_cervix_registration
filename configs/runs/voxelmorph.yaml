@@ -1,43 +1,59 @@
-__base__:
-    - ../default_runtime.yaml
-    - ../datasets/DualCervix.yaml
-    - ../models/VxmDense_deeplabv3.yaml
+__import__:
+    import_config: &import_config
+        __base__:
+            - ../default_runtime.yaml
+            - ../datasets/DualCervix.yaml
+            - ../models/VxmDense_deeplabv3.yaml
 
-model:
-    class_path: models.models.vxm_dense.VxmDense
-    init_args:
-        loss_config:
-            seg:
-                weight: 0.0
-data:
-    class_path: datasets.DualCervix.DualCervixDataModule
-    init_args:
-        data_loader_config:
-            batch_size: 32
-            num_workers: 8
-            prefetch_factor: 2
-            drop_last: true
-trainer:
-    logger:
-        class_path: utils.loggers.wandb.WandbNamedLogger
-        init_args:
-            name: VxmDense_deeplabv3
-            offline: false
-    # debug
-    limit_train_batches: 1.0
-    limit_val_batches: 1.0
-    limit_test_batches: 1.0
-    limit_predict_batches: 1.0
-    fast_dev_run: false
-    overfit_batches: 0.0
-    # train
-    max_epochs: null
-    min_epochs: null
-    max_steps: -1
-    min_steps: null
-    max_time: null
-    # gradient clip
-    gradient_clip_val: null
-    gradient_clip_algorithm: null
-# check point
-ckpt_path: null
+        model:
+            class_path: models.models.vxm_dense.VxmDense
+            init_args:
+                loss_config:
+                    seg:
+                        weight: 0.0
+        data:
+            class_path: datasets.DualCervix.DualCervixDataModule
+            init_args:
+                data_loader_config:
+                    batch_size: 16
+                    num_workers: 8
+                    prefetch_factor: 2
+        trainer:
+            logger:
+                class_path: utils.loggers.wandb.WandbNamedLogger
+                init_args:
+                    name: VxmDense_deeplabv3
+                    offline: false
+            # debug
+            limit_train_batches: 1.0
+            limit_val_batches: 1.0
+            limit_test_batches: 1.0
+            limit_predict_batches: 1.0
+            fast_dev_run: false
+            overfit_batches: 0.0
+            # train
+            max_epochs: null
+            min_epochs: null
+            max_steps: -1
+            min_steps: null
+            max_time: null
+            # gradient clip
+            gradient_clip_val: null
+            gradient_clip_algorithm: null
+
+predict:
+    trainer:
+        logger: false
+    <<: *import_config
+    ckpt_path: null
+fit:
+    <<: *import_config
+    ckpt_path: null
+test:
+    <<: *import_config
+    ckpt_path: null
+validate:
+    <<: *import_config
+    ckpt_path: null
+tune:
+    <<: *import_config

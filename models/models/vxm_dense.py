@@ -181,7 +181,7 @@ class VxmDense(LightningModule):
             for k in self.norm_cfg[part]:
                 self.norm_cfg[part][k] = torch.tensor(self.norm_cfg[part][k]).to(self.device)[None, :, None, None]
 
-        log_dir = get_log_dir(self.trainer)
+        log_dir = os.path.dirname(os.path.dirname(self.trainer.predicted_ckpt_path))
         self.output_path = os.path.join(log_dir, 'visualization')
         if os.path.exists(self.output_path):
             shutil.rmtree(self.output_path)

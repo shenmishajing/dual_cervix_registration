@@ -2,8 +2,7 @@ import os
 from pytorch_lightning.utilities import _JSONARGPARSE_AVAILABLE
 from pytorch_lightning.utilities.cli import LightningCLI, LightningArgumentParser, SaveConfigCallback, DATAMODULE_REGISTRY
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
-from jsonargparse import ActionConfigFile as _ActionConfigFile
-from jsonargparse import get_config_read_mode, Path
+from jsonargparse import ActionConfigFile, get_config_read_mode, Path
 from jsonargparse.actions import _ActionSubCommands
 from jsonargparse.loaders_dumpers import load_value, get_loader_exceptions
 
@@ -22,7 +21,7 @@ def deep_update(source, override):
             delete_keys = override.pop('__delete__')
             if isinstance(delete_keys, str):
                 delete_keys = [delete_keys]
-                
+
             if isinstance(delete_keys, list):
                 for k in delete_keys:
                     if k in source:
@@ -85,7 +84,7 @@ def parse_string(parser, cfg_string, **kwargs):
     return parse_config(parser, parser.parse_string(cfg_string, **kwargs), **kwargs)
 
 
-class ActionConfigFile(_ActionConfigFile):
+class LightningActionConfigFile(ActionConfigFile):
     @staticmethod
     def apply_config(parser, cfg, dest, value) -> None:
         with _ActionSubCommands.not_single_subcommand():
@@ -122,7 +121,7 @@ class ArgumentParser(LightningArgumentParser):
             )
         super(LightningArgumentParser, self).__init__(*args, parse_as_dict = parse_as_dict, **kwargs)
         self.add_argument(
-            "--config", action = ActionConfigFile, help = "Path to a configuration file in json or yaml format."
+            "--config", action = LightningActionConfigFile, help = "Path to a configuration file in json or yaml format."
         )
         self.callback_keys: List[str] = []
         # separate optimizers and lr schedulers to know which were added

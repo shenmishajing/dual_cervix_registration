@@ -12,20 +12,31 @@ from utils.callbacks.save_and_log_config_callback import SaveAndLogConfigCallbac
 DATAMODULE_REGISTRY(object)
 
 
-def deep_update(source, overrides):
+def deep_update(source, override):
     """
     Update a nested dictionary or similar mapping.
     Modify ``source`` in place.
     """
-    if isinstance(source, Dict) and isinstance(overrides, Dict):
-        for key, value in overrides.items():
+    if isinstance(source, Dict) and isinstance(override, Dict):
+        if '__delete__' in override:
+            delete_keys = override.pop('__delete__')
+            if isinstance(delete_keys, str):
+                delete_keys = [delete_keys]
+                
+            if isinstance(delete_keys, list):
+                for k in delete_keys:
+                    if k in source:
+                        source.pop(k)
+            elif delete_keys:
+                return override
+        for key, value in override.items():
             if isinstance(value, Dict) and key in source:
                 source[key] = deep_update(source[key], value)
             else:
-                source[key] = overrides[key]
+                source[key] = override[key]
         return source
     else:
-        return overrides
+        return override
 
 
 def parse_dict_config(parser, cfg_file, cfg_path = None, **kwargs):

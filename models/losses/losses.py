@@ -24,15 +24,12 @@ class NCC(nn.Module):
         assert ndims in [1, 2, 3], "volumes should be 1 to 3 dimensions. found: %d" % ndims
 
         # set window size
-        win = [Ii.shape[1]] + ([9] * ndims if self.win is None else self.win)
+        win = ([9] * ndims if self.win is None else self.win)
+        padding = math.floor(win[0] / 2)
+        groups = Ii.shape[1]
 
         # compute filters
-        sum_filt = torch.ones([1, *win], dtype = Ii.dtype, device = Ii.device)
-
-        pad_no = math.floor(win[0] / 2)
-
-        stride = (1,) * ndims
-        padding = (pad_no,) * ndims
+        sum_filt = torch.ones([groups, 1, *win], dtype = Ii.dtype, device = Ii.device)
 
         # get convolution function
         conv_fn = getattr(F, 'conv%dd' % ndims)
@@ -42,11 +39,11 @@ class NCC(nn.Module):
         J2 = Ji * Ji
         IJ = Ii * Ji
 
-        I_sum = conv_fn(Ii, sum_filt, stride = stride, padding = padding)
-        J_sum = conv_fn(Ji, sum_filt, stride = stride, padding = padding)
-        I2_sum = conv_fn(I2, sum_filt, stride = stride, padding = padding)
-        J2_sum = conv_fn(J2, sum_filt, stride = stride, padding = padding)
-        IJ_sum = conv_fn(IJ, sum_filt, stride = stride, padding = padding)
+        I_sum = conv_fn(Ii, sum_filt, padding = padding, groups = groups)
+        J_sum = conv_fn(Ji, sum_filt, padding = padding, groups = groups)
+        I2_sum = conv_fn(I2, sum_filt, padding = padding, groups = groups)
+        J2_sum = conv_fn(J2, sum_filt, padding = padding, groups = groups)
+        IJ_sum = conv_fn(IJ, sum_filt, padding = padding, groups = groups)
 
         win_size = np.prod(win)
         u_I = I_sum / win_size

@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 import torch.nn.functional as F
+from torch.linalg import norm
 import numpy as np
 import math
 
@@ -90,17 +91,13 @@ class Grad(nn.Module):
         super().__init__()
         self.penalty = penalty
         self.loss_mult = loss_mult
-        kernel_x = [[-1., 0., 1.], [-2., 0., 2.], [-1., 0., 1.]]
-        kernel_y = [[-1., -2., -1.], [0., 0., 0.], [1., 2., 1.]]
-        self.register_buffer('kernel_x', torch.tensor(kernel_x))
-        self.register_buffer('kernel_y', torch.tensor(kernel_y))
+        kernel = [[[-1., 0., 1.], [-2., 0., 2.], [-1., 0., 1.]],
+                  [[-1., -2., -1.], [0., 0., 0.], [1., 2., 1.]]]
+        self.register_buffer('kernel', torch.tensor(kernel)[:, None, None, ...])
 
     def forward(self, y_pred):
-        dx = torch.pow(torch.abs(F.conv2d(y_pred, self.kernel_x[None, None, ...].repeat(1, y_pred.shape[1], 1, 1), padding = 1)),
-                       self.penalty)
-        dy = torch.pow(torch.abs(F.conv2d(y_pred, self.kernel_y[None, None, ...].repeat(1, y_pred.shape[1], 1, 1), padding = 1)),
-                       self.penalty)
-        grad = torch.mean(torch.pow(torch.clamp(dx + dy, min = 1e-7), 1 / self.penalty))
+        grad = [F.conv2d(y_pred, self.kernel[i].expand(-1, y_pred.shape[1], -1, -1), padding = 1) for i in range(len(self.kernel))]
+        grad = torch.mean(norm(torch.stack(grad, dim = -1), dim = -1, ord = self.penalty))
 
         if self.loss_mult is not None:
             grad *= self.loss_mult

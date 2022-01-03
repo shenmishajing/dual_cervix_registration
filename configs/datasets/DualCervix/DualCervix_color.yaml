@@ -1,0 +1,95 @@
+# img mean info
+#RGB:
+#    before_crop:
+#        all:
+#            mean: [ 79.2785873413086, 95.04068756103516, 138.40469360351562 ]
+#            std: [ 56.09214782714844, 55.104705810546875, 61.23152542114258 ]
+#        acid:
+#            mean: [ 97.57475280761719, 102.059326171875, 143.3719024658203 ]
+#            std: [ 45.371376037597656, 43.705657958984375, 51.12405776977539 ]
+#        iodine:
+#            mean: [ 60.97126388549805, 87.94377136230469, 133.1758270263672 ]
+#            std: [ 59.728607177734375, 63.77861404418945, 69.6864013671875 ]
+#    after_crop:
+#        all:
+#            mean: [ 75.73311614990234, 89.88715362548828, 140.6180419921875 ]
+#            std: [ 14.991394996643066, 16.072477340698242, 29.735885620117188 ]
+#        acid:
+#            mean: [ 107.5614013671875, 108.2771987915039, 157.57847595214844 ]
+#            std: [ 15.73247241973877, 13.8170747756958, 24.39257049560547 ]
+#        iodine:
+#            mean: [ 43.90464401245117, 71.49726867675781, 123.6583023071289 ]
+#            std: [ 14.21172046661377, 18.04821014404297, 34.25565719604492 ]
+#Grayscale:
+#    after_crop:
+#        all:
+#            mean: [ 103.4625244140625 ]
+#            std: [ 18.089488983154297 ]
+#        acid:
+#            mean: [ 122.95729064941406 ]
+#            std: [ 15.282942771911621 ]
+#        iodine:
+#            mean: [ 83.96733856201172 ]
+#            std: [ 20.51559829711914 ]
+
+__import__:
+    import_load_img_transform: &import_load_img_transform
+        type: LoadImageFromFile
+        color_type: color
+
+    import_img_scale: &import_img_scale
+        img_scale: [ 608, 608 ]
+    import_resize_transform: &import_resize_transform
+        type: Resize
+        <<: *import_img_scale
+        keep_ratio: false
+
+    import_acid_normalize_transform: &import_acid_normalize_transform
+        type: Normalize
+        mean: [ 107.5614013671875, 108.2771987915039, 157.57847595214844 ]
+        std: [ 15.73247241973877, 13.8170747756958, 24.39257049560547 ]
+        to_rgb: true
+    import_iodine_normalize_transform: &import_iodine_normalize_transform
+        type: Normalize
+        mean: [ 43.90464401245117, 71.49726867675781, 123.6583023071289 ]
+        std: [ 14.21172046661377, 18.04821014404297, 34.25565719604492 ]
+        to_rgb: true
+
+data:
+    class_path: datasets.DualCervix.DualCervixDataModule
+    init_args:
+        pipeline:
+            acid:
+                -   <<: *import_load_img_transform
+                -   type: LoadAnnotations
+                    with_bbox: true
+                -   <<: *import_resize_transform
+                -   <<: *import_acid_normalize_transform
+                -   type: RandomFlip
+                    flip_ratio: 0.5
+                -   type: GenSegmentationFromBBox
+                    num_classes: 1
+                -   type: DefaultFormatBundle
+                -   type: Collect
+                    keys: [ img, gt_bboxes, gt_labels, gt_segments_from_bboxes ]
+            iodine:
+                -   <<: *import_load_img_transform
+                -   type: LoadAnnotations
+                    with_bbox: true
+                -   <<: *import_resize_transform
+                -   <<: *import_iodine_normalize_transform
+                -   type: RandomFlip
+                    flip_ratio: 0.5
+                -   type: GenSegmentationFromBBox
+                    num_classes: 1
+                -   type: DefaultFormatBundle
+                -   type: Collect
+                    keys: [ img, gt_bboxes, gt_labels, gt_segments_from_bboxes ]
+        data_root: data/DualCervixDetection
+        ann_path: cropped_annos
+        img_prefix: cropped_img
+        data_loader_config:
+            batch_size: 32
+            num_workers: 8
+            prefetch_factor: 2
+            drop_last: true

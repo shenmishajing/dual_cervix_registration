@@ -2,8 +2,8 @@ __import__:
     import_config: &import_config
         __base__:
             - ../default_runtime.yaml
-            - ../datasets/DualCervix.yaml
-            - ../models/VxmDense_deeplabv3.yaml
+            - ../datasets/DualCervix/DualCervix_color.yaml
+            - ../models/VxmDense/VxmDense_deeplabv3.yaml
 
         model:
             class_path: models.models.vxm_dense.VxmDense
@@ -42,18 +42,18 @@ __import__:
             gradient_clip_algorithm: null
 
 predict:
+    ckpt_path: null
     trainer:
         logger: false
     <<: *import_config
-    ckpt_path: null
 fit:
-    <<: *import_config
     ckpt_path: null
+    <<: *import_config
 test:
-    <<: *import_config
     ckpt_path: null
+    <<: *import_config
 validate:
-    <<: *import_config
     ckpt_path: null
+    <<: *import_config
 tune:
     <<: *import_config

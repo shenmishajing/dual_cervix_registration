@@ -225,24 +225,21 @@ class DualCervixDataSet(CocoDataset):
 class DualCervixDataModule(LightningDataModule):
     def __init__(self,
                  ann_path: str,
-                 train_pipeline: Mapping[str, Any],
-                 test_pipeline: Mapping[str, Any],
+                 pipeline: Mapping[str, Any],
                  data_root: Optional[str] = '.',
                  img_prefix: Optional[str] = '',
                  seg_prefix: Optional[str] = '',
                  data_loader_config: Optional[Mapping[str, Any]] = None):
         super().__init__(data_loader_config)
         self.ann_path = ann_path
-        self.train_pipeline = train_pipeline
-        self.test_pipeline = test_pipeline
+        self.pipeline = pipeline
         self.data_root = data_root
         self.img_prefix = img_prefix
         self.seg_prefix = seg_prefix
 
     def _build_data_set(self, split):
         return DualCervixDataSet(ann_file = os.path.join(self.ann_path, split + '_{part}.json'),
-                                 pipeline = self.train_pipeline,
-                                 # pipeline = self.train_pipeline if split == 'train' else self.test_pipeline,
+                                 pipeline = self.pipeline,
                                  data_root = self.data_root,
                                  img_prefix = self.img_prefix,
                                  seg_prefix = self.seg_prefix)

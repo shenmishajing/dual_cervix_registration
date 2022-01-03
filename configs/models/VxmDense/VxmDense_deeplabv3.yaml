@@ -1,0 +1,25 @@
+__base__: VxmDense_Unet.yaml
+
+model:
+    class_path: models.models.vxm_dense.VxmDense
+    init_args:
+        backbone:
+            __delete__: True
+            class_path: models.models.deeplabv3.DeepLabV3
+            init_args:
+                backbone:
+                    class_path: torchvision.models._utils.IntermediateLayerGetter
+                    init_args:
+                        model:
+                            class_path: models.backbones.resnet.ResNet
+                            init_args:
+                                depth: 50
+                                inplanes: 6
+                        return_layers:
+                            layer4: out
+                            layer3: aux
+                classifier:
+                    class_path: torchvision.models.segmentation.deeplabv3.DeepLabHead
+                    init_args:
+                        in_channels: 2048
+                        num_classes: 16

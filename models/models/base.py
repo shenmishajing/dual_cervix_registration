@@ -1,4 +1,4 @@
-from typing import Any, Sequence, Mapping, Optional
+from typing import Any, Sequence, Mapping, Optional, Union
 
 import torch
 from pytorch_lightning import LightningModule as _LightningModule
@@ -8,7 +8,7 @@ from utils import optim
 class LightningModule(_LightningModule):
 
     def __init__(self,
-                 loss_config: Optional[Mapping[str, Any]] = None,
+                 loss_config: Mapping[str, Union[torch.nn.Module, Mapping[str, Union[torch.nn.Module, int, float]]]] = None,
                  optimizer_config: Optional[Mapping[str, Any]] = None,
                  *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -21,13 +21,9 @@ class LightningModule(_LightningModule):
 
     def _parse_loss_config(self, loss_config):
         for key, value in loss_config.items():
-            if hasattr(self, '__build_loss_' + key):
-                build_func = self.__dict__['_build_loss_' + key]
-            else:
-                build_func = self._build_loss
-
-            setattr(self, 'loss_' + key, build_func(cls_type = value['type'], **value.get('param', {})))
-        self.loss_config = loss_config
+            if not isinstance(value, Mapping):
+                loss_config[key] = {'module': value, 'weight': 1}
+            setattr(self, 'loss_' + key, loss_config[key]['module'])
         self.loss_weight = {k: v.get('weight', 1) for k, v in loss_config.items()}
 
     def _build_loss(self, cls_type, *args, **kwargs):
@@ -130,13 +126,17 @@ class LightningModule(_LightningModule):
     def _loss_step(self, batch, res, prefix = 'train'):
         raise NotImplementedError
 
-    def loss_step(self, batch, res, prefix = 'train', use_loss_weight = True):
+    def loss_step(self, batch, res, prefix = 'train', use_loss_weight = True, loss_use_loss_weight = True):
         loss = self._loss_step(batch, res, prefix)
         # multi loss weights
         if use_loss_weight:
-            loss = {k: v * self.loss_weight[k] for k, v in loss.items()}
+            loss = {k: v * (1 if k not in self.loss_weight else self.loss_weight[k]) for k, v in loss.items()}
         # calculate loss
-        loss['loss'] = torch.sum(torch.stack([v for v in loss.values()]))
+        if not use_loss_weight and loss_use_loss_weight:
+            total_loss = [v * (1 if k not in self.loss_weight else self.loss_weight[k]) for k, v in loss.items()]
+        else:
+            total_loss = [v for k, v in loss.items()]
+        loss['loss'] = torch.sum(torch.stack(total_loss))
         # add prefix
         loss = {(f'{prefix}/' if prefix is not None else '') + ('loss_' if 'loss' not in k else '') + k: v for k, v in loss.items()}
         return loss

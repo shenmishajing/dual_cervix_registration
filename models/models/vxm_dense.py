@@ -28,8 +28,7 @@ class VxmDense(LightningModule):
                  bidir: Optional[bool] = False,
                  use_probs: Optional[bool] = False,
                  unet_half_res: Optional[bool] = False,
-                 loss_config: Optional[Mapping[str, Any]] = None,
-                 optimizer_config: Optional[Mapping[str, Any]] = None):
+                 *args, **kwargs):
         """ 
         Parameters:
             inshape: Input shape. e.g. (192, 192, 192)
@@ -43,7 +42,7 @@ class VxmDense(LightningModule):
                 Default is False.
         """
         self.int_downsize = int_downsize
-        super().__init__(loss_config = loss_config, optimizer_config = optimizer_config)
+        super().__init__(*args, **kwargs)
 
         # internal flag indicating whether to return flow or integrated warp during inference
         self.training = True

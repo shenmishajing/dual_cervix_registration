@@ -1,0 +1,53 @@
+model:
+    class_path: models.models.cycle_gan_model.CycleGANModel
+    init_args:
+        netG_A: &import_G_config
+            class_path: models.layers.GAN_networks.ResnetGenerator
+            init_args:
+                input_nc: 3
+                output_nc: 3
+                ngf: 64
+                use_dropout: false
+                n_blocks: 9
+                norm_layer: torch.nn.InstanceNorm2d
+        netG_B: *import_G_config
+        netD_A: &import_D_config
+            class_path: models.layers.GAN_networks.NLayerDiscriminator
+            init_args:
+                input_nc: 3
+                ndf: 64
+                n_layers: 3
+                norm_layer: torch.nn.InstanceNorm2d
+        netD_B: *import_D_config
+        is_train: true
+        pool_size: 50
+        loss_config:
+            gan:
+                module:
+                    class_path: models.losses.losses.GANLoss
+                    init_args:
+                        gan_mode: lsgan
+                weight: 1.0
+            cycle:
+                module:
+                    class_path: torch.nn.L1Loss
+                weight: 1.0
+            idt:
+                module:
+                    class_path: torch.nn.L1Loss
+                weight: 1.0
+        optimizer_config:
+            optimizer:
+                type: Adam
+                lr: 1.0e-3
+                weight_decay: 0.01
+            lr_scheduler:
+                scheduler:
+                    type: ReduceLROnPlateau
+                    mode: min
+                    factor: 0.1
+                    patience: 5
+                    cooldown: 2
+                monitor: train/loss
+                warmup_config:
+                    warmup_iters: 500

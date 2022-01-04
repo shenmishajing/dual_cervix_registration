@@ -196,7 +196,7 @@ class CycleGANModel(LightningModule):
         self.toggle_optimizer(optimizer_G, 0)
         optimizer_G.zero_grad()  # set G_A and G_B's gradients to zero
         self.manual_backward(loss['train/loss_G'])  # calculate gradients for G_A and G_B
-        self.optimizer_G.step()  # update G_A and G_B's weights
+        optimizer_G.step()  # update G_A and G_B's weights
         # D_A and D_B
         self.untoggle_optimizer(0)
         optimizer_D.zero_grad()  # set D_A and D_B's gradients to zero

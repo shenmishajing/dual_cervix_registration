@@ -175,7 +175,7 @@ class CycleGANModel(LightningModule):
         return {'loss_G': loss_G, 'loss_G_A': loss_G_A, 'loss_G_B': loss_G_B, 'loss_cycle_A': loss_cycle_A, 'loss_cycle_B': loss_cycle_B,
                 'loss_idt_A': loss_idt_A, 'loss_idt_B': loss_idt_B}
 
-    def loss_step(self, batch, res, prefix = 'train', use_loss_weight = True, loss_use_loss_weight = True):
+    def loss_step(self, batch, res, prefix = 'train', use_loss_weight = True, loss_use_loss_weight = True, detach = None):
         loss_G = self.backward_G(res)
         loss_D_A = self.backward_D(self.netD_A, res['real_B'], self.fake_B_pool.query(res['fake_B']))  # calculate gradients for D_A
         loss_D_B = self.backward_D(self.netD_B, res['real_A'], self.fake_A_pool.query(res['fake_A']))  # calculate graidents for D_B
@@ -183,7 +183,10 @@ class CycleGANModel(LightningModule):
         loss['loss_D'] = loss['loss_D_A'] + loss['loss_D_B']
         loss['loss'] = loss['loss_G'] + loss['loss_D']
         # add prefix
-        loss = {(f'{prefix}/' if prefix is not None else '') + ('loss_' if 'loss' not in k else '') + k: v for k, v in loss.items()}
+        if detach is None:
+            detach = prefix != 'train'
+        loss = {(f'{prefix}/' if prefix is not None else '') + ('loss_' if 'loss' not in k else '') + k: (v.detach() if detach else v) for
+                k, v in loss.items()}
         return loss
 
     def training_step(self, batch, batch_idx):
@@ -204,19 +207,7 @@ class CycleGANModel(LightningModule):
         optimizer_D.step()  # update D_A and D_B's weights
 
         self.log_dict(loss)
-        return loss
-
-    def validation_step(self, batch, batch_idx):
-        res = self(batch)
-        loss = self.loss_step(batch, res, 'val')
-        self.log_dict(loss)
-        return loss
-
-    def test_step(self, batch, batch_idx):
-        res = self(batch)
-        loss = self.loss_step(batch, res, 'test')
-        self.log_dict(loss)
-        return loss
+        return loss['train/loss']
 
     # def on_predict_start(self) -> None:
     #     self.norm_cfg = {

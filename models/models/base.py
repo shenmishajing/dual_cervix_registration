@@ -26,9 +26,6 @@ class LightningModule(_LightningModule):
             setattr(self, 'loss_' + key, loss_config[key]['module'])
         self.loss_weight = {k: v.get('weight', 1) for k, v in loss_config.items()}
 
-    def _build_loss(self, cls_type, *args, **kwargs):
-        raise NotImplementedError
-
     def _parse_optimizer_config(self, optimizer_config):
         assert isinstance(optimizer_config, dict), 'optimizer_config should be a dict'
         if 'optimizer' not in optimizer_config:
@@ -38,7 +35,7 @@ class LightningModule(_LightningModule):
         self.optimizer_config = optimizer_config
         return optimizer_config['optimizer'][0]['lr']
 
-    def _construct_optimizer(self, optimizer, set_lr = False):
+    def _construct_optimizer(self, optimizer, set_lr = False, params = None):
         """
         Constructs the optimizer.
 
@@ -48,9 +45,21 @@ class LightningModule(_LightningModule):
         optimizer_type = optimizer.pop('type')
         if hasattr(self, 'lr') and self.lr is not None and set_lr:
             optimizer['lr'] = self.lr
-        optimizer = optim.__dict__[optimizer_type](self.parameters(), **optimizer)
+        optimizer = optim.__dict__[optimizer_type](self.parameters() if params is None else params, **optimizer)
 
         return optimizer
+
+    def _construct_optimizers(self, optimizers):
+        """
+        Constructs all optimizers.
+
+        Args:
+            optimizers: list of dictionary containing optimizer configuration.
+        """
+        for i in range(len(optimizers)):
+            optimizers[i] = self._construct_optimizer(optimizers[i], set_lr = i == 0)
+
+        return optimizers
 
     @staticmethod
     def _construct_lr_scheduler(optimizer, lr_scheduler):
@@ -73,8 +82,7 @@ class LightningModule(_LightningModule):
         optimizer_config = self.optimizer_config.copy()
 
         # construct optimizer
-        for i in range(len(optimizer_config['optimizer'])):
-            optimizer_config['optimizer'][i] = self._construct_optimizer(optimizer_config['optimizer'][i], set_lr = i == 0)
+        optimizer_config['optimizer'] = self._construct_optimizers(optimizer_config['optimizer'])
 
         # construct lr_scheduler
         if 'lr_scheduler' in optimizer_config:

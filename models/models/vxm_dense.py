@@ -6,11 +6,9 @@ import torch
 import torch.nn as nn
 from torch.distributions.normal import Normal
 from .base import LightningModule
-from .. import losses
-from . import layers
+from ..layers import layers
 
-from typing import Sequence, Optional, Mapping, Any
-from utils import get_log_dir
+from typing import Sequence, Optional, Any
 
 
 class VxmDense(LightningModule):
@@ -88,12 +86,6 @@ class VxmDense(LightningModule):
 
         # configure transformer
         self.transformer = layers.SpatialTransformer(inshape)
-
-    def _build_loss(self, cls_type, **kwargs):
-        return losses.__dict__[cls_type](**kwargs)
-
-    def _build_loss_grad(self, cls_type, **kwargs):
-        return losses.__dict__[cls_type](loss_mult = self.int_downsize, **kwargs)
 
     def forward(self, batch):
         # concatenate inputs and propagate unet

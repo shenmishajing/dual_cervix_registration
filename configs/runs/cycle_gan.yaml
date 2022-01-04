@@ -9,9 +9,9 @@ __import__:
             class_path: datasets.DualCervix.DualCervixDataModule
             init_args:
                 data_loader_config:
-                    batch_size: 32
-                    num_workers: 8
-                    prefetch_factor: 4
+                    batch_size: 1
+                    num_workers: 1
+                    prefetch_factor: 2
         trainer:
             logger:
                 class_path: utils.loggers.wandb.WandbNamedLogger

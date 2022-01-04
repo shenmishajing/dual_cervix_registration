@@ -86,8 +86,8 @@ class CycleGANModel(LightningModule):
         Parameters:
             opt (Option class)-- stores all the experiment flags; needs to be a subclass of BaseOptions
         """
-        self.automatic_optimization = False
         super().__init__(*args, **kwargs)
+        self.automatic_optimization = False
         self.netG_A = netG_A
         self.netG_B = netG_B
         self.lambda_A = lambda_A

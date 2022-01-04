@@ -77,6 +77,9 @@ class CycleGANModel(LightningModule):
                  netD_B: nn.Module = None,
                  is_train: bool = True,
                  pool_size: int = 50,
+                 lambda_A: float = 10,
+                 lambda_B: float = 10,
+                 lambda_idt: float = 10,
                  *args, **kwargs):
         """Initialize the CycleGAN class.
 
@@ -87,6 +90,9 @@ class CycleGANModel(LightningModule):
         super().__init__(*args, **kwargs)
         self.netG_A = netG_A
         self.netG_B = netG_B
+        self.lambda_A = lambda_A
+        self.lambda_B = lambda_B
+        self.lambda_idt = lambda_idt
 
         if is_train:
             self.netD_A = netD_A
@@ -180,7 +186,7 @@ class CycleGANModel(LightningModule):
         loss = {(f'{prefix}/' if prefix is not None else '') + ('loss_' if 'loss' not in k else '') + k: v for k, v in loss.items()}
         return loss
 
-    def train_step(self, batch, batch_idx):
+    def training_step(self, batch, batch_idx):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
         # forward
         res = self(batch)

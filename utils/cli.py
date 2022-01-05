@@ -1,12 +1,14 @@
 import os
+from pytorch_lightning import Trainer
 from pytorch_lightning.utilities import _JSONARGPARSE_AVAILABLE
 from pytorch_lightning.utilities.cli import LightningCLI, LightningArgumentParser, SaveConfigCallback, DATAMODULE_REGISTRY
-from typing import Any, Dict, List, Optional, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Tuple, Type, Union, Callable
 from jsonargparse import ActionConfigFile, get_config_read_mode, Path
 from jsonargparse.actions import _ActionSubCommands
 from jsonargparse.loaders_dumpers import load_value, get_loader_exceptions
 
-from utils.callbacks.save_and_log_config_callback import SaveAndLogConfigCallback
+from .callbacks.save_and_log_config_callback import SaveAndLogConfigCallback
+from .trainer import Trainer as _Trainer
 
 DATAMODULE_REGISTRY(object)
 
@@ -133,9 +135,10 @@ class CLI(LightningCLI):
     def __init__(
             self,
             save_config_callback: Optional[Type[SaveConfigCallback]] = SaveAndLogConfigCallback,
+            trainer_class: Union[Type[Trainer], Callable[..., Trainer]] = _Trainer,
             *args, **kwargs
     ) -> None:
-        super().__init__(save_config_callback = save_config_callback, *args, **kwargs)
+        super().__init__(save_config_callback = save_config_callback, trainer_class = trainer_class, *args, **kwargs)
 
     def init_parser(self, **kwargs: Any) -> LightningArgumentParser:
         """Method that instantiates the argument parser."""

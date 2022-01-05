@@ -19,7 +19,6 @@ class WarmupScheduler(_LRScheduler):
             warnings.warn("To get the last learning rate computed by the scheduler, "
                           "please use `get_last_lr()`.", UserWarning)
 
-        if self.last_epoch <= self.warmup_iters:
-            return [base_lr * self.last_epoch / self.warmup_iters
-                    for base_lr in self.base_lrs]
+        if self.last_epoch < self.warmup_iters:
+            return [base_lr * (self.last_epoch + 1) / self.warmup_iters for base_lr in self.base_lrs]
         return [group['lr'] for group in self.optimizer.param_groups]

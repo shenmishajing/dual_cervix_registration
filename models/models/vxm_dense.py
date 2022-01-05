@@ -151,18 +151,6 @@ class VxmDense(LightningModule):
 
         return loss
 
-    def validation_step(self, batch, batch_idx):
-        res = self(batch)
-        loss = self.loss_step(batch, res, 'val', use_loss_weight = False)
-        self.log_dict(loss)
-        return loss
-
-    def test_step(self, batch, batch_idx):
-        res = self(batch)
-        loss = self.loss_step(batch, res, 'test', use_loss_weight = False)
-        self.log_dict(loss)
-        return loss
-
     def on_predict_start(self) -> None:
         self.norm_cfg = {
             'acid': {'mean': [122.95729064941406], 'std': [15.282942771911621]},

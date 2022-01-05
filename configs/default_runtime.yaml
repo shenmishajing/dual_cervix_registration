@@ -56,7 +56,7 @@ trainer:
     num_nodes: 1
     num_processes: 1
     gpus: -1
-    strategy: null
+    strategy: ddp_find_unused_parameters_false
     sync_batchnorm: false
     # speed up
     precision: 32

@@ -79,7 +79,7 @@ class CycleGANModel(LightningModule):
                  pool_size: int = 50,
                  lambda_A: float = 10,
                  lambda_B: float = 10,
-                 lambda_idt: float = 10,
+                 lambda_idt: float = 0.5,
                  *args, **kwargs):
         """Initialize the CycleGAN class.
 

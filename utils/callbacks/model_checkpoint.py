@@ -4,10 +4,10 @@ from typing import Dict, Optional
 from weakref import proxy
 import pytorch_lightning as pl
 from pytorch_lightning.utilities.types import _METRIC
-from pytorch_lightning.callbacks import ModelCheckpoint as _ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint
 
 
-class ModelCheckpoint(_ModelCheckpoint):
+class ModelCheckpointWithLinkBest(ModelCheckpoint):
     CHECKPOINT_NAME_BEST = "best"
 
     def __init__(

@@ -152,19 +152,19 @@ class LightningModule(_LightningModule):
                 k, v in loss.items()}
         return loss
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch, *args, **kwargs):
         res = self(batch)
         loss = self.loss_step(batch, res, 'train')
         self.log_dict(loss)
         return loss['train/loss']
 
-    def validation_step(self, batch, batch_idx):
+    def validation_step(self, batch, *args, **kwargs):
         res = self(batch)
         loss = self.loss_step(batch, res, 'val')
         self.log_dict(loss)
         return loss
 
-    def test_step(self, batch, batch_idx):
+    def test_step(self, batch, *args, **kwargs):
         res = self(batch)
         loss = self.loss_step(batch, res, 'test')
         self.log_dict(loss)

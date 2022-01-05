@@ -1,3 +1,4 @@
+import copy
 import torch
 from torch import nn
 import random
@@ -111,7 +112,7 @@ class CycleGANModel(LightningModule):
         params = [itertools.chain(self.netG_A.parameters(), self.netG_B.parameters()),
                   itertools.chain(self.netD_A.parameters(), self.netD_B.parameters())]
         if len(optimizers) == 1:
-            optimizers = [optimizers[0].copy() for _ in range(len(params))]
+            optimizers = [copy.deepcopy(optimizers[0]) for _ in range(len(params))]
         for i in range(len(optimizers)):
             optimizers[i] = self._construct_optimizer(optimizers[i], set_lr = i == 0, params = params[i])
 
@@ -207,6 +208,7 @@ class CycleGANModel(LightningModule):
         optimizer_D.step()  # update D_A and D_B's weights
 
         self.log_dict(loss)
+        self.manual_lr_schedulers_step('step', batch_idx = batch_idx)
         return loss['train/loss']
 
     # def on_predict_start(self) -> None:

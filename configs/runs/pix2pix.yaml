@@ -3,7 +3,7 @@ __import__:
         __base__:
             - ../default_runtime.yaml
             - ../datasets/DualCervix/DualCervix_color.yaml
-            - ../models/GAN/CycleGAN.yaml
+            - ../models/GAN/pix2pix.yaml
 
         data:
             class_path: datasets.DualCervix.DualCervixDataModule
@@ -16,7 +16,7 @@ __import__:
             logger:
                 class_path: utils.loggers.wandb.WandbNamedLogger
                 init_args:
-                    name: cycle_gan_ResnetGenerator_NLayerDiscriminator_color
+                    name: pix2pix_UnetGenerator_NLayerDiscriminator_color
                     offline: false
             # debug
             limit_train_batches: 1.0

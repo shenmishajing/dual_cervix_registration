@@ -1,0 +1,47 @@
+model:
+    class_path: models.models.pix2pix_model.py.UnetGenerator
+    init_args:
+        netG:
+            class_path: models.layers.GAN_networks.ResnetGenerator
+            init_args:
+                input_nc: 3
+                output_nc: 3
+                ngf: 64
+                use_dropout: false
+                num_downs: 8
+                norm_layer: torch.nn.BatchNorm2d
+        netD:
+            class_path: models.layers.GAN_networks.NLayerDiscriminator
+            init_args:
+                input_nc: 6
+                ndf: 64
+                n_layers: 3
+                norm_layer: torch.nn.BatchNorm2d
+        is_train: true
+        lambda_L1: 100
+        loss_config:
+            gan:
+                module:
+                    class_path: models.losses.losses.GANLoss
+                    init_args:
+                        gan_mode: vanilla
+                weight: 1.0
+            L1:
+                module:
+                    class_path: torch.nn.L1Loss
+                weight: 1.0
+        optimizer_config:
+            optimizer:
+                type: Adam
+                lr: 1.0e-3
+                weight_decay: 0.01
+            lr_scheduler:
+                scheduler:
+                    type: ReduceLROnPlateau
+                    mode: min
+                    factor: 0.1
+                    patience: 5
+                    cooldown: 2
+                monitor: train/loss
+                warmup_config:
+                    warmup_iters: 500

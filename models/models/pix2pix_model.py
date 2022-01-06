@@ -19,7 +19,6 @@ class Pix2PixModel(LightningModule):
     def __init__(self,
                  netG: nn.Module,
                  netD: nn.Module = None,
-                 is_train: bool = True,
                  lambda_L1: float = 100.0,
                  *args, **kwargs):
         """Initialize the pix2pix class.
@@ -29,11 +28,12 @@ class Pix2PixModel(LightningModule):
         """
         super().__init__(*args, **kwargs)
         self.automatic_optimization = False
+
         self.netG = netG
+        self.netD = netD
+
         self.lambda_L1 = lambda_L1
 
-        if is_train:
-            self.netD = netD
 
     def _construct_optimizers(self, optimizers):
         """

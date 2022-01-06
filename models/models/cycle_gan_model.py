@@ -76,7 +76,6 @@ class CycleGANModel(LightningModule):
                  netG_B: nn.Module,
                  netD_A: nn.Module = None,
                  netD_B: nn.Module = None,
-                 is_train: bool = True,
                  pool_size: int = 50,
                  lambda_A: float = 10,
                  lambda_B: float = 10,
@@ -89,18 +88,18 @@ class CycleGANModel(LightningModule):
         """
         super().__init__(*args, **kwargs)
         self.automatic_optimization = False
+
         self.netG_A = netG_A
         self.netG_B = netG_B
+        self.netD_A = netD_A
+        self.netD_B = netD_B
+
         self.lambda_A = lambda_A
         self.lambda_B = lambda_B
         self.lambda_idt = lambda_idt
 
-        if is_train:
-            self.netD_A = netD_A
-            self.netD_B = netD_B
-
-            self.fake_A_pool = ImagePool(pool_size)  # create image buffer to store previously generated images
-            self.fake_B_pool = ImagePool(pool_size)  # create image buffer to store previously generated images
+        self.fake_A_pool = ImagePool(pool_size)  # create image buffer to store previously generated images
+        self.fake_B_pool = ImagePool(pool_size)  # create image buffer to store previously generated images
 
     def _construct_optimizers(self, optimizers):
         """

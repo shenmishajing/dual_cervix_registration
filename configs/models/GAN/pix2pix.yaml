@@ -1,8 +1,8 @@
 model:
-    class_path: models.models.pix2pix_model.py.UnetGenerator
+    class_path: models.models.pix2pix_model.Pix2PixModel
     init_args:
         netG:
-            class_path: models.layers.GAN_networks.ResnetGenerator
+            class_path: models.layers.GAN_networks.UnetGenerator
             init_args:
                 input_nc: 3
                 output_nc: 3

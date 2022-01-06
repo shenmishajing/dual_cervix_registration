@@ -14,6 +14,7 @@ class Pix2PixModel(LightningModule):
 
     pix2pix paper: https://arxiv.org/pdf/1611.07004.pdf
     """
+    ModalDict = {'src': 'acid', 'trg': 'iodine'}
 
     def __init__(self,
                  netG: nn.Module,
@@ -53,7 +54,7 @@ class Pix2PixModel(LightningModule):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         real_A = batch[self.ModalDict['src']]['img']
         real_B = batch[self.ModalDict['trg']]['img']
-        fake_B = self.netG_A(real_A)  # G_A(A)
+        fake_B = self.netG(real_A)  # G(A)
         return {'real_A': real_A, 'real_B': real_B, 'fake_B': fake_B}
 
     def backward_D(self, res):

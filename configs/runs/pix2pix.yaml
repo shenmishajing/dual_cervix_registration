@@ -9,8 +9,8 @@ __import__:
             class_path: datasets.DualCervix.DualCervixDataModule
             init_args:
                 data_loader_config:
-                    batch_size: 1
-                    num_workers: 3
+                    batch_size: 16
+                    num_workers: 8
                     prefetch_factor: 2
         trainer:
             logger:

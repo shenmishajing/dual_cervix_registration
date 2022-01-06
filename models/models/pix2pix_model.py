@@ -37,7 +37,6 @@ class Pix2PixModel(LightningModule):
 
         self.lambda_L1 = lambda_L1
 
-
     def _construct_optimizers(self, optimizers):
         """
         Constructs all optimizers.

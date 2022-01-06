@@ -17,7 +17,6 @@ model:
                 ndf: 64
                 n_layers: 3
                 norm_layer: torch.nn.BatchNorm2d
-        is_train: true
         lambda_L1: 1
         norm_cfg:
             acid:

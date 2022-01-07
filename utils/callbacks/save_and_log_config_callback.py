@@ -20,14 +20,7 @@ class SaveAndLogConfigCallback(SaveConfigCallback):
         log_dir = get_log_dir(trainer)
         assert log_dir is not None
         config_path = os.path.join(log_dir, self.config_filename)
-        if not self.overwrite and os.path.isfile(config_path):
-            raise RuntimeError(
-                f"{self.__class__.__name__} expected {config_path} to NOT exist. Aborting to avoid overwriting"
-                " results of a previous run. You can delete the previous config file,"
-                " set `LightningCLI(save_config_callback=None)` to disable config saving,"
-                " or set `LightningCLI(save_config_overwrite=True)` to overwrite the config file."
-            )
-        if trainer.is_global_zero:
+        if (self.overwrite or not os.path.isfile(config_path)) and trainer.is_global_zero:
             # save only on rank zero to avoid race conditions on DDP.
             # the `log_dir` needs to be created as we rely on the logger to do it usually
             # but it hasn't logged anything at this point

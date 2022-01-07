@@ -1,4 +1,10 @@
 __import__:
+    import_logger_config: &import_logger_config
+        class_path: utils.loggers.wandb.WandbNamedLogger
+        init_args:
+            name: VxmDense_Unet_color
+            offline: false
+
     import_config: &import_config
         __base__:
             - ../default_runtime.yaml
@@ -19,11 +25,6 @@ __import__:
                     num_workers: 8
                     prefetch_factor: 2
         trainer:
-            logger:
-                class_path: utils.loggers.wandb.WandbNamedLogger
-                init_args:
-                    name: VxmDense_deeplabv3
-                    offline: false
             # debug
             limit_train_batches: 1.0
             limit_val_batches: 1.0
@@ -43,11 +44,11 @@ __import__:
 
 predict:
     ckpt_path: null
-    trainer:
-        logger: false
     <<: *import_config
 fit:
     ckpt_path: null
+    trainer:
+        logger: *import_logger_config
     <<: *import_config
 test:
     ckpt_path: null

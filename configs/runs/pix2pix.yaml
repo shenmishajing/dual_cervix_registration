@@ -36,8 +36,6 @@ __import__:
             gradient_clip_algorithm: null
             # gpus
             strategy: ddp
-            # speed up
-            precision: 32
 
 predict:
     ckpt_path: null

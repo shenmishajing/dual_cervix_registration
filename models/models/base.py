@@ -11,12 +11,12 @@ from utils import optim
 class LightningModule(_LightningModule):
 
     def __init__(self,
-                 norm_cfg: Mapping[str, Any] = None,
+                 normalize_config: Mapping[str, Any] = None,
                  loss_config: Mapping[str, Union[torch.nn.Module, Mapping[str, Union[torch.nn.Module, int, float]]]] = None,
                  optimizer_config: Optional[Mapping[str, Any]] = None,
                  *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self.norm_cfg = norm_cfg
+        self.normalize_config = normalize_config
 
         if loss_config is not None:
             self._parse_loss_config(loss_config)

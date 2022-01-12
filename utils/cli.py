@@ -36,8 +36,30 @@ def deep_update(source, override):
             else:
                 source[key] = override[key]
         return source
-    else:
-        return override
+    elif isinstance(source, List) and isinstance(override, Dict):
+        if 'change_item' in override:
+            change_item = override.pop('change_item')
+            for index, v in change_item:
+                source[index] = deep_update(source[index], v)
+
+        if '__delete__' in override:
+            delete_keys = override.pop('__delete__')
+            if isinstance(delete_keys, int):
+                delete_keys = [delete_keys]
+
+            if isinstance(delete_keys, list):
+                delete_keys = list({int(d) for d in delete_keys})
+                delete_keys.sort(reverse = True)
+                for k in delete_keys:
+                    source.pop(k)
+            elif delete_keys:
+                return override
+        if 'pre_item' in override:
+            source = override['pre_item'] + source
+        if 'post_item' in override:
+            source = source + override['post_item']
+        return source
+    return override
 
 
 def parse_dict_config(parser, cfg_file, cfg_path = None, **kwargs):
@@ -46,11 +68,17 @@ def parse_dict_config(parser, cfg_file, cfg_path = None, **kwargs):
         if sub_cfg_paths is not None:
             if not isinstance(sub_cfg_paths, list):
                 sub_cfg_paths = [sub_cfg_paths]
-            sub_cfg_paths = [os.path.join(os.path.dirname(cfg_path), sub_cfg_path) if not sub_cfg_path.startswith(
-                '/') or cfg_path is None else sub_cfg_path for sub_cfg_path in sub_cfg_paths]
+            sub_cfg_paths = [sub_cfg_path if isinstance(sub_cfg_path, list) else [sub_cfg_path, ''] for sub_cfg_path in sub_cfg_paths]
+            if cfg_path is not None:
+                sub_cfg_paths = [[os.path.normpath(os.path.join(os.path.dirname(cfg_path), sub_cfg_path[0])) if not os.path.isabs(
+                    sub_cfg_path[0]) else sub_cfg_path[0], sub_cfg_path[1]] for sub_cfg_path in sub_cfg_paths]
             sub_cfg_file = {}
             for sub_cfg_path in sub_cfg_paths:
-                sub_cfg_file = deep_update(sub_cfg_file, parse_path(parser, sub_cfg_path, **kwargs).as_dict())
+                cur_cfg_file = parse_path(parser, sub_cfg_path[0], **kwargs).as_dict()
+                for key in sub_cfg_path[1].split('.'):
+                    if key:
+                        cur_cfg_file = cur_cfg_file[key]
+                sub_cfg_file = deep_update(sub_cfg_file, cur_cfg_file)
             cfg_file = deep_update(sub_cfg_file, cfg_file)
     if '__import__' in cfg_file:
         cfg_file.pop('__import__')

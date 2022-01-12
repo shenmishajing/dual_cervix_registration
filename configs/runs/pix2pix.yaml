@@ -3,6 +3,7 @@ __import__:
         class_path: utils.loggers.wandb.WandbNamedLogger
         init_args:
             name: pix2pix_UnetGenerator_NLayerDiscriminator_color
+            project: dual_cervix_registration
             offline: false
 
     import_config: &import_config

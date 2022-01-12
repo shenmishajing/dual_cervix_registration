@@ -162,12 +162,13 @@ class VxmDense(LightningModule):
             shutil.rmtree(self.output_path)
         os.makedirs(self.output_path)
 
-    def predict_step(self, batch: Any, batch_idx: int, **kwargs) -> Any:
+    def predict_step(self, batch, *args, **kwargs):
         res = self(batch)
         res_img = {}
         for part in self.ModalDict.values():
             res_img[part] = batch[part]['img'] * self.normalize_config[part]['std'] + self.normalize_config[part]['mean']
-        res_img['res'] = res['y_source'] * self.normalize_config[self.ModalDict['trg']]['std'] + self.normalize_config[self.ModalDict['trg']]['mean']
+        res_img['res'] = res['y_source'] * self.normalize_config[self.ModalDict['trg']]['std'] + \
+                         self.normalize_config[self.ModalDict['trg']]['mean']
         res_img = torch.cat([res_img[self.ModalDict['src']], res_img['res'], res_img[self.ModalDict['trg']]], dim = -1)
         res_img = res_img.add_(0.5).clamp_(0, 255).permute(0, 2, 3, 1).to('cpu', torch.uint8).numpy()
         for i in range(res_img.shape[0]):

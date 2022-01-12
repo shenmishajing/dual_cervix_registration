@@ -224,15 +224,16 @@ class CycleGANModel(LightningModule):
             shutil.rmtree(self.output_path)
         os.makedirs(self.output_path)
 
-    def predict_step(self, batch, **kwargs):
+    def predict_step(self, batch, *args, **kwargs):
         res = self(batch)
         res_img = {}
         for part in self.ModalDict.values():
             res_img[part] = batch[part]['img'] * self.normalize_config[part]['std'] + self.normalize_config[part]['mean']
-        res_img['res'] = res['fake_B'] * self.normalize_config[self.ModalDict['trg']]['std'] + self.normalize_config[self.ModalDict['trg']]['mean']
+        res_img['res'] = res['fake_B'] * self.normalize_config[self.ModalDict['trg']]['std'] + self.normalize_config[self.ModalDict['trg']][
+            'mean']
         res_img = torch.cat([res_img[self.ModalDict['src']], res_img['res'], res_img[self.ModalDict['trg']]], dim = -1)
         res_img = res_img.add_(0.5).clamp_(0, 255).permute(0, 2, 3, 1).to('cpu', torch.uint8).numpy()
         for i in range(res_img.shape[0]):
             cur_name = batch['acid']['img_metas'][i]['ori_filename'].removesuffix('_2.jpg') + '.png'
-            cv2.imwrite(os.path.join(self.output_path, cur_name), res_img[i])
+            cv2.imwrite(os.path.join(self.output_path, cur_name), cv2.cvtColor(res_img[i], cv2.COLOR_RGB2BGR))
         return res_img

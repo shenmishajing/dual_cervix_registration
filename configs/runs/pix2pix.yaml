@@ -13,42 +13,52 @@ __import__:
                     batch_size: 16
                     num_workers: 8
                     prefetch_factor: 2
-        trainer:
-            # debug
-            limit_train_batches: 1.0
-            limit_val_batches: 1.0
-            limit_test_batches: 1.0
-            limit_predict_batches: 1.0
-            fast_dev_run: false
-            overfit_batches: 0.0
-            # train
-            max_epochs: null
-            min_epochs: null
-            max_steps: -1
-            min_steps: null
-            max_time: null
-            # gradient clip
-            gradient_clip_val: null
-            gradient_clip_algorithm: null
-            # gpus
-            strategy: ddp
+
+    import_trainer_config: &import_trainer_config
+        # debug
+        limit_train_batches: 1.0
+        limit_val_batches: 1.0
+        limit_test_batches: 1.0
+        limit_predict_batches: 1.0
+        fast_dev_run: false
+        overfit_batches: 0.0
+        # train
+        max_epochs: null
+        min_epochs: null
+        max_steps: -1
+        min_steps: null
+        max_time: null
+        # gradient clip
+        gradient_clip_val: null
+        gradient_clip_algorithm: null
+        # gpus
+        strategy: ddp
 
 __base__: ../default_runtime.yaml
 
 predict:
     ckpt_path: null
+    trainer:
+        <<: *import_trainer_config
     <<: *import_config
 fit:
     ckpt_path: null
     trainer:
         logger:
             init_args: *import_logger_config
+        <<: *import_trainer_config
     <<: *import_config
 test:
     ckpt_path: null
+    trainer:
+        <<: *import_trainer_config
     <<: *import_config
 validate:
     ckpt_path: null
+    trainer:
+        <<: *import_trainer_config
     <<: *import_config
 tune:
+    trainer:
+        <<: *import_trainer_config
     <<: *import_config

@@ -5,17 +5,19 @@ import torch
 from pytorch_lightning import LightningModule as _LightningModule
 from pytorch_lightning.utilities import rank_zero_warn
 from pytorch_lightning.utilities.exceptions import MisconfigurationException
-from utils import optim
+from utils import optim, initialize
 
 
 class LightningModule(_LightningModule):
 
     def __init__(self,
+                 initialize_config: Union[Mapping[str, Any], Sequence[Mapping[str, Any]]] = None,
                  normalize_config: Mapping[str, Any] = None,
                  loss_config: Mapping[str, Union[torch.nn.Module, Mapping[str, Union[torch.nn.Module, int, float]]]] = None,
                  optimizer_config: Optional[Mapping[str, Any]] = None,
                  *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
+        self.initialize_config = initialize_config
         self.normalize_config = normalize_config
 
         if loss_config is not None:
@@ -23,6 +25,11 @@ class LightningModule(_LightningModule):
 
         if optimizer_config is not None:
             self.lr = self._parse_optimizer_config(optimizer_config)
+
+    def init_weights(self):
+        """Initialize the weights."""
+        if self.initialize_config:
+            initialize(self, self.initialize_config)
 
     def _parse_loss_config(self, loss_config):
         for key, value in loss_config.items():
@@ -242,6 +249,10 @@ class LightningModule(_LightningModule):
         loss = {(f'{prefix}/' if prefix is not None else '') + ('loss_' if 'loss' not in k else '') + k: (v.detach() if detach else v) for
                 k, v in loss.items()}
         return loss
+
+    def setup(self, stage: Optional[str] = None) -> None:
+        if stage == 'fit':
+            self.init_weights()
 
     def training_step(self, batch, *args, **kwargs):
         res = self(batch)

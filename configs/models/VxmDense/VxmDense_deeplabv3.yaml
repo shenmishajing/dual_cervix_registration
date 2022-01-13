@@ -1,7 +1,6 @@
 __base__: VxmDense_Unet.yaml
 
 model:
-    class_path: models.models.vxm_dense.VxmDense
     init_args:
         backbone:
             __delete__: True

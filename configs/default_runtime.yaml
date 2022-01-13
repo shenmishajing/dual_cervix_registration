@@ -1,70 +1,96 @@
-trainer:
-    logger: false
-    callbacks:
-        -   class_path: utils.progress.rich_progress.RichDefaultThemeProgressBar
-            init_args:
-                show_version: true
-        -   class_path: pytorch_lightning.callbacks.RichModelSummary
-            init_args:
-                max_depth: 2
-        -   class_path: utils.callbacks.set_sharing_strategy_callback.SetSharingStrategyCallback
-            init_args:
-                strategy: file_descriptor
-        -   class_path: utils.callbacks.wandb_logger_watch_model_callback.WandbLoggerWatchModelCallback
-            init_args:
-                log: all
-                log_freq: 50
-                log_graph: false
-        -   class_path: utils.callbacks.lr_monitor.LearningRateMonitor
-            init_args:
-                logging_interval: null
-                log_momentum: false
-                name_prefix: lr/
-        -   class_path: utils.callbacks.model_checkpoint.ModelCheckpointWithLinkBest
-            init_args:
-                monitor: val/loss
-                filename: 'epoch:{epoch}-val_loss:{val/loss:.4g}'
-                save_top_k: 3
-                save_last: true
-                save_best: true
-                mode: min
-                auto_insert_metric_name: false
-    # debug
-    limit_train_batches: 1.0
-    limit_val_batches: 1.0
-    limit_test_batches: 1.0
-    limit_predict_batches: 1.0
-    fast_dev_run: false
-    overfit_batches: 0.0
-    # train
-    max_epochs: null
-    min_epochs: null
-    max_steps: -1
-    min_steps: null
-    max_time: null
-    # gradient clip
-    gradient_clip_val: null
-    gradient_clip_algorithm: null
-    # path
-    weights_save_path: work_dirs
-    # gpus
-    num_nodes: 1
-    num_processes: 1
-    gpus: -1
-    strategy: ddp_find_unused_parameters_false
-    sync_batchnorm: false
-    # speed up
-    precision: 32
-    auto_lr_find: false
-    detect_anomaly: true
-    auto_scale_batch_size: false
-    accumulate_grad_batches: null
-    profiler: null
-    # val and log
-    check_val_every_n_epoch: 1
-    val_check_interval: 1.0
-    flush_logs_every_n_steps: null
-    log_every_n_steps: 50
-    track_grad_norm: -1
-# seed
-seed_everything: null
+__import__:
+    import_logger_config: &import_logger_config
+        class_path: utils.loggers.wandb.WandbNamedLogger
+        init_args:
+            name: default_run_name
+            project: dual_cervix_registration
+            offline: false
+
+    import_config: &import_config
+        trainer:
+            logger: false
+            callbacks:
+                -   class_path: utils.progress.rich_progress.RichDefaultThemeProgressBar
+                    init_args:
+                        show_version: true
+                -   class_path: pytorch_lightning.callbacks.RichModelSummary
+                    init_args:
+                        max_depth: 2
+                -   class_path: utils.callbacks.set_sharing_strategy_callback.SetSharingStrategyCallback
+                    init_args:
+                        strategy: file_descriptor
+                -   class_path: utils.callbacks.wandb_logger_watch_model_callback.WandbLoggerWatchModelCallback
+                    init_args:
+                        log: all
+                        log_freq: 50
+                        log_graph: false
+                -   class_path: utils.callbacks.lr_monitor.LearningRateMonitor
+                    init_args:
+                        logging_interval: null
+                        log_momentum: false
+                        name_prefix: lr/
+                -   class_path: utils.callbacks.model_checkpoint.ModelCheckpointWithLinkBest
+                    init_args:
+                        monitor: val/loss
+                        filename: 'epoch:{epoch}-val_loss:{val/loss:.4g}'
+                        save_top_k: 3
+                        save_last: true
+                        save_best: true
+                        mode: min
+                        auto_insert_metric_name: false
+            # debug
+            limit_train_batches: 1.0
+            limit_val_batches: 1.0
+            limit_test_batches: 1.0
+            limit_predict_batches: 1.0
+            fast_dev_run: false
+            overfit_batches: 0.0
+            # train
+            max_epochs: null
+            min_epochs: null
+            max_steps: -1
+            min_steps: null
+            max_time: null
+            # gradient clip
+            gradient_clip_val: null
+            gradient_clip_algorithm: null
+            # path
+            weights_save_path: work_dirs
+            # gpus
+            num_nodes: 1
+            num_processes: 1
+            gpus: -1
+            strategy: ddp_find_unused_parameters_false
+            sync_batchnorm: false
+            # speed up
+            precision: 32
+            auto_lr_find: false
+            detect_anomaly: true
+            auto_scale_batch_size: false
+            accumulate_grad_batches: null
+            profiler: null
+            # val and log
+            check_val_every_n_epoch: 1
+            val_check_interval: 1.0
+            flush_logs_every_n_steps: null
+            log_every_n_steps: 50
+            track_grad_norm: -1
+        # seed
+        seed_everything: null
+
+predict:
+    ckpt_path: null
+    <<: *import_config
+fit:
+    ckpt_path: null
+    trainer:
+        logger: *import_logger_config
+    <<: *import_config
+test:
+    ckpt_path: null
+    <<: *import_config
+validate:
+    ckpt_path: null
+    <<: *import_config
+tune:
+    <<: *import_config

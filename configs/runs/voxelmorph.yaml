@@ -1,25 +1,18 @@
 __import__:
     import_logger_config: &import_logger_config
-        class_path: utils.loggers.wandb.WandbNamedLogger
-        init_args:
-            name: VxmDense_Unet_color
-            project: dual_cervix_registration
-            offline: false
+        name: VxmDense_Unet_color
 
     import_config: &import_config
         __base__:
-            - ../default_runtime.yaml
             - ../datasets/DualCervix/DualCervix_color.yaml
             - ../models/VxmDense/VxmDense_deeplabv3.yaml
 
         model:
-            class_path: models.models.vxm_dense.VxmDense
             init_args:
                 loss_config:
                     seg:
                         weight: 0.0
         data:
-            class_path: datasets.DualCervix.DualCervixDataModule
             init_args:
                 data_loader_config:
                     batch_size: 16
@@ -43,13 +36,16 @@ __import__:
             gradient_clip_val: null
             gradient_clip_algorithm: null
 
+__base__: ../default_runtime.yaml
+
 predict:
     ckpt_path: null
     <<: *import_config
 fit:
     ckpt_path: null
     trainer:
-        logger: *import_logger_config
+        logger:
+            init_args: *import_logger_config
     <<: *import_config
 test:
     ckpt_path: null

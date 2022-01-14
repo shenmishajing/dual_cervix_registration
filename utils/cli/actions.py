@@ -1,9 +1,10 @@
 import os
 import copy
-from typing import Dict, List
-from jsonargparse import get_config_read_mode, Path
+from typing import Dict, List, Optional
 from jsonargparse.util import change_to_path_dir
-from jsonargparse.loaders_dumpers import load_value
+from jsonargparse import ActionConfigFile, get_config_read_mode, Path
+from jsonargparse.actions import _ActionSubCommands
+from jsonargparse.loaders_dumpers import load_value, get_loader_exceptions
 
 
 def deep_update(source, override):
@@ -122,3 +123,26 @@ def _parse_string(cfg_string, **kwargs):
 
 def parse_string(parser, cfg_string, **kwargs):
     return parser._apply_actions(_parse_string(cfg_string, parser = parser, **kwargs))
+
+
+class LightningActionConfigFile(ActionConfigFile):
+    @staticmethod
+    def apply_config(parser, cfg, dest, value) -> None:
+        with _ActionSubCommands.not_single_subcommand():
+            if dest not in cfg:
+                cfg[dest] = []
+            kwargs = {'env': False, 'defaults': False, '_skip_check': True, '_fail_no_subcommand': False}
+            try:
+                cfg_path: Optional[Path] = Path(value, mode = get_config_read_mode())
+            except TypeError as ex_path:
+                try:
+                    if isinstance(load_value(value), str):
+                        raise ex_path
+                    cfg_path = None
+                    cfg_file = parse_string(parser, value, **kwargs)
+                except (TypeError,) + get_loader_exceptions() as ex_str:
+                    raise TypeError(f'Parser key "{dest}": {ex_str}') from ex_str
+            else:
+                cfg_file = parse_path(parser, value, **kwargs)
+            cfg[dest].append(cfg_path)
+            cfg.update(cfg_file)

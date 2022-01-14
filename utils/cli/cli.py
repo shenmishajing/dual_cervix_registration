@@ -2,38 +2,12 @@ from pytorch_lightning import Trainer
 from pytorch_lightning.utilities import _JSONARGPARSE_AVAILABLE
 from pytorch_lightning.utilities.cli import LightningCLI, LightningArgumentParser, SaveConfigCallback, DATAMODULE_REGISTRY
 from typing import Any, Dict, List, Optional, Tuple, Type, Union, Callable
-from jsonargparse import ActionConfigFile, get_config_read_mode, Path
-from jsonargparse.actions import _ActionSubCommands
-from jsonargparse.loaders_dumpers import load_value, get_loader_exceptions
 
 from utils.callbacks.save_and_log_config_callback import SaveAndLogConfigCallback
 from .trainer import Trainer as _Trainer
-from .parser import parse_path, parse_string
+from .actions import LightningActionConfigFile
 
 DATAMODULE_REGISTRY(object)
-
-
-class LightningActionConfigFile(ActionConfigFile):
-    @staticmethod
-    def apply_config(parser, cfg, dest, value) -> None:
-        with _ActionSubCommands.not_single_subcommand():
-            if dest not in cfg:
-                cfg[dest] = []
-            kwargs = {'env': False, 'defaults': False, '_skip_check': True, '_fail_no_subcommand': False}
-            try:
-                cfg_path: Optional[Path] = Path(value, mode = get_config_read_mode())
-            except TypeError as ex_path:
-                try:
-                    if isinstance(load_value(value), str):
-                        raise ex_path
-                    cfg_path = None
-                    cfg_file = parse_string(parser, value, **kwargs)
-                except (TypeError,) + get_loader_exceptions() as ex_str:
-                    raise TypeError(f'Parser key "{dest}": {ex_str}') from ex_str
-            else:
-                cfg_file = parse_path(parser, value, **kwargs)
-            cfg[dest].append(cfg_path)
-            cfg.update(cfg_file)
 
 
 class ArgumentParser(LightningArgumentParser):

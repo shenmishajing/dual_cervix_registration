@@ -20,6 +20,7 @@ class VxmDense(LightningModule):
     def __init__(self,
                  backbone: nn.Module,
                  inshape: Sequence[int],
+                 style_transformer: nn.Module = None,
                  final_nf: Optional[int] = 16,
                  int_steps: Optional[int] = 7,
                  int_downsize: Optional[int] = 2,
@@ -51,6 +52,10 @@ class VxmDense(LightningModule):
 
         # configure core unet model
         self.backbone = backbone
+        self.style_transformer = style_transformer
+        if self.style_transformer is not None:
+            for p in self.style_transformer.parameters():
+                p.requires_grad = False
 
         # configure unet to flow field layer
         Conv = getattr(nn, 'Conv%dd' % ndims)
@@ -91,6 +96,9 @@ class VxmDense(LightningModule):
         # concatenate inputs and propagate unet
         source = batch[self.ModalDict['src']]['img']
         target = batch[self.ModalDict['trg']]['img']
+        if self.style_transformer is not None:
+            self.style_transformer.eval()
+            source = self.style_transformer(source)
         x = torch.cat([source, target], dim = 1)
         x = self.backbone(x)
 

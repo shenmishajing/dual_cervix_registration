@@ -4,10 +4,24 @@ model:
         backbone:
             class_path: models.backbones.Unet.Unet
             init_args:
-                inshape: [ 608, 608 ]
+                inshape: [ 512, 512 ]
                 infeats: 6
-        inshape: [ 608, 608 ]
+        style_transformer:
+            class_path: models.layers.GAN_networks.UnetGenerator
+            init_args:
+                input_nc: 3
+                output_nc: 3
+                ngf: 64
+                use_dropout: false
+                num_downs: 8
+                norm_layer: torch.nn.BatchNorm2d
+        inshape: [ 512, 512 ]
         final_nf: 16
+        initialize_config:
+            type: Pretrained
+            model_path: style_transformer
+            checkpoint: work_dirs/pix2pix_UnetGenerator_NLayerDiscriminator_color/1ubiih3v/checkpoints/last.ckpt
+            prefix: netG
         normalize_config:
             acid:
                 mean: [ 107.5614013671875, 108.2771987915039, 157.57847595214844 ]

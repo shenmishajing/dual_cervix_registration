@@ -40,15 +40,12 @@ model:
         optimizer_config:
             optimizer:
                 type: Adam
-                lr: 1.0e-3
+                lr: 1.0e-5
                 weight_decay: 0.01
             lr_scheduler:
                 scheduler:
-                    type: ReduceLROnPlateau
-                    mode: min
-                    factor: 0.1
-                    patience: 5
-                    cooldown: 2
-                monitor: train/loss
+                    type: StepLR
+                    gamma: 0.1
+                    step_size: 100
                 warmup_config:
                     warmup_iters: 500

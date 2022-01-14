@@ -18,6 +18,7 @@ model:
                 n_layers: 3
                 norm_layer: torch.nn.BatchNorm2d
         lambda_L1: 1
+        lambda_D: 1
         normalize_config:
             acid:
                 mean: [ 107.5614013671875, 108.2771987915039, 157.57847595214844 ]

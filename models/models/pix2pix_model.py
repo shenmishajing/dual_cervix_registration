@@ -23,6 +23,7 @@ class Pix2PixModel(LightningModule):
                  netG: nn.Module,
                  netD: nn.Module = None,
                  lambda_L1: float = 100.0,
+                 lambda_D: float = 100.0,
                  *args, **kwargs):
         """Initialize the pix2pix class.
 
@@ -36,6 +37,7 @@ class Pix2PixModel(LightningModule):
         self.netD = netD
 
         self.lambda_L1 = lambda_L1
+        self.lambda_D = lambda_D
 
     def _construct_optimizers(self, optimizers):
         """
@@ -64,11 +66,11 @@ class Pix2PixModel(LightningModule):
         # Fake; stop backprop to the generator by detaching fake_B
         fake_AB = torch.cat((res['real_A'], res['fake_B']), 1)
         pred_fake = self.netD(fake_AB.detach())
-        loss_D_fake = self.loss_gan(pred_fake, False)
+        loss_D_fake = self.loss_gan(pred_fake, False) * self.lambda_D
         # Real
         real_AB = torch.cat((res['real_A'], res['real_B']), 1)
         pred_real = self.netD(real_AB)
-        loss_D_real = self.loss_gan(pred_real, True)
+        loss_D_real = self.loss_gan(pred_real, True) * self.lambda_D
         # Combined loss and calculate gradients
         loss_D = (loss_D_real + loss_D_fake) * 0.5
         return {'loss_D': loss_D, 'loss_D_real': loss_D_real, 'loss_D_fake': loss_D_fake}

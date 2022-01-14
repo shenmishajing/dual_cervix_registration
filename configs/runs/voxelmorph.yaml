@@ -1,6 +1,6 @@
 __import__:
     import_logger_config: &import_logger_config
-        name: VxmDense_Unet_color
+        name: VxmDense_deeplabv3_color
 
     import_config: &import_config
         __base__:

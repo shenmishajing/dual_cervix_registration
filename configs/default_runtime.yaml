@@ -74,33 +74,35 @@ __import__:
         log_every_n_steps: 50
         track_grad_norm: -1
 
+    import_ckpt_path_config: &import_ckpt_path_config
+        ckpt_path: null
+
     import_seed_config: &import_seed_config
-        # seed
         seed_everything: null
 
 predict:
-    ckpt_path: null
     trainer:
         logger: false
         <<: *import_trainer_config
+    <<: *import_ckpt_path_config
     <<: *import_seed_config
 fit:
-    ckpt_path: null
     trainer:
         logger: *import_logger_config
         <<: *import_trainer_config
+    <<: *import_ckpt_path_config
     <<: *import_seed_config
 test:
-    ckpt_path: null
     trainer:
         logger: false
         <<: *import_trainer_config
+    <<: *import_ckpt_path_config
     <<: *import_seed_config
 validate:
-    ckpt_path: null
     trainer:
         logger: false
         <<: *import_trainer_config
+    <<: *import_ckpt_path_config
     <<: *import_seed_config
 tune:
     trainer:

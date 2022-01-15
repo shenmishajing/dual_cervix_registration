@@ -24,7 +24,7 @@ class WandbLoggerLogAllCodeCallback(Callback):
         include_pattern = [re.compile(rf'.*\.{p}$') for p in include_pattern]
 
         if exclude_pattern is None:
-            exclude_pattern = ['wandb', 'temp', 'tmp', 'work_dirs', 'requirements', r'\.', r'.*\.egg-info', r'setup.py']
+            exclude_pattern = ['wandb', 'venv', 'temp', 'tmp', 'work_dirs', 'requirements', r'\.', r'.*\.egg-info', r'setup.py']
         elif isinstance(exclude_pattern, str):
             exclude_pattern = [exclude_pattern]
         ex_p = []

@@ -15,7 +15,8 @@ class SaveAndLogConfigCallback(SaveConfigCallback):
         # save the config in `setup` because (1) we want it to save regardless of the trainer function run
         # and we want to save before processes are spawned
         if trainer.logger is not None:
-            trainer.logger.log_hyperparams(self.config[self.config['subcommand']])
+            if 'subcommand' in self.config:
+                trainer.logger.log_hyperparams(self.config[self.config['subcommand']])
 
             log_dir = get_log_dir(trainer)
             assert log_dir is not None

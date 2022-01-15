@@ -1,67 +1,34 @@
-__import__:
-    import_logger_config: &import_logger_config
-        name: pix2pix_UnetGenerator_NLayerDiscriminator_color
+__base__:
+    - ../default_runtime.yaml
+    - ../datasets/DualCervix/DualCervix_color.yaml
+    - ../models/GAN/pix2pix.yaml
 
-    import_config: &import_config
-        __base__:
-            - ../datasets/DualCervix/DualCervix_color.yaml
-            - ../models/GAN/pix2pix.yaml
+trainer:
+    logger:
+        init_args:
+            name: pix2pix_UnetGenerator_NLayerDiscriminator_color
+    # debug
+    limit_train_batches: 1.0
+    limit_val_batches: 1.0
+    limit_test_batches: 1.0
+    limit_predict_batches: 1.0
+    fast_dev_run: false
+    overfit_batches: 0.0
+    # train
+    max_epochs: null
+    min_epochs: null
+    max_steps: -1
+    min_steps: null
+    max_time: null
+    # gradient clip
+    gradient_clip_val: null
+    gradient_clip_algorithm: null
+    # gpus
+    strategy: ddp
 
-        data:
-            init_args:
-                data_loader_config:
-                    batch_size: 16
-                    num_workers: 8
-                    prefetch_factor: 2
-
-    import_trainer_config: &import_trainer_config
-        # debug
-        limit_train_batches: 1.0
-        limit_val_batches: 1.0
-        limit_test_batches: 1.0
-        limit_predict_batches: 1.0
-        fast_dev_run: false
-        overfit_batches: 0.0
-        # train
-        max_epochs: null
-        min_epochs: null
-        max_steps: -1
-        min_steps: null
-        max_time: null
-        # gradient clip
-        gradient_clip_val: null
-        gradient_clip_algorithm: null
-        # gpus
-        strategy: ddp
-
-    import_ckpt_path_config: &import_ckpt_path_config
-        ckpt_path: null
-
-__base__: ../default_runtime.yaml
-
-predict:
-    trainer:
-        <<: *import_trainer_config
-    <<: *import_config
-    <<: *import_ckpt_path_config
-fit:
-    trainer:
-        logger:
-            init_args: *import_logger_config
-        <<: *import_trainer_config
-    <<: *import_config
-    <<: *import_ckpt_path_config
-test:
-    trainer:
-        <<: *import_trainer_config
-    <<: *import_config
-    <<: *import_ckpt_path_config
-validate:
-    trainer:
-        <<: *import_trainer_config
-    <<: *import_config
-    <<: *import_ckpt_path_config
-tune:
-    trainer:
-        <<: *import_trainer_config
-    <<: *import_config
+data:
+    init_args:
+        data_loader_config:
+            batch_size: 16
+            num_workers: 8
+            prefetch_factor: 2

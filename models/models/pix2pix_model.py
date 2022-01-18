@@ -23,6 +23,7 @@ class Pix2PixModel(LightningModule):
                  netG: nn.Module,
                  netD: nn.Module = None,
                  lambda_L1: float = 100.0,
+                 lambda_GAN: float = 100.0,
                  lambda_D: float = 100.0,
                  *args, **kwargs):
         """Initialize the pix2pix class.
@@ -37,6 +38,7 @@ class Pix2PixModel(LightningModule):
         self.netD = netD
 
         self.lambda_L1 = lambda_L1
+        self.lambda_GAN = lambda_GAN
         self.lambda_D = lambda_D
 
     def _construct_optimizers(self, optimizers):
@@ -80,7 +82,7 @@ class Pix2PixModel(LightningModule):
         # First, G(A) should fake the discriminator
         fake_AB = torch.cat((res['real_A'], res['fake_B']), 1)
         pred_fake = self.netD(fake_AB)
-        loss_G_GAN = self.loss_gan(pred_fake, True)
+        loss_G_GAN = self.loss_gan(pred_fake, True) * self.lambda_GAN
         # Second, G(A) = B
         loss_G_L1 = self.loss_L1(res['fake_B'], res['real_B']) * self.lambda_L1
         # combine loss and calculate gradients

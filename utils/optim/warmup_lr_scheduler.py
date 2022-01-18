@@ -12,7 +12,7 @@ class WarmupScheduler(_LRScheduler):
 
     def __init__(self, optimizer, warmup_iters, last_epoch = -1, verbose = False):
         self.warmup_iters = warmup_iters
-        super().__init__(optimizer, last_epoch, verbose)
+        super().__init__(optimizer, last_epoch = last_epoch, verbose = verbose)
 
     def get_lr(self):
         if not self._get_lr_called_within_step:

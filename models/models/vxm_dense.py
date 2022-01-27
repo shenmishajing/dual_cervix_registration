@@ -98,8 +98,10 @@ class VxmDense(LightningModule):
         target = batch[self.ModalDict['trg']]['img']
         if self.style_transformer is not None:
             self.style_transformer.eval()
-            source = self.style_transformer(source)
-        x = torch.cat([source, target], dim = 1)
+            transformed_source = self.style_transformer(source)
+        else:
+            transformed_source = source
+        x = torch.cat([torch.mean(x, dim = 1, keepdim = True) for x in [transformed_source, target]], dim = 1)
         x = self.backbone(x)
 
         # transform into flow field
@@ -181,5 +183,5 @@ class VxmDense(LightningModule):
         res_img = res_img.add_(0.5).clamp_(0, 255).permute(0, 2, 3, 1).to('cpu', torch.uint8).numpy()
         for i in range(res_img.shape[0]):
             cur_name = batch['acid']['img_metas'][i]['ori_filename'].removesuffix('_2.jpg') + '.png'
-            cv2.imwrite(os.path.join(self.output_path, cur_name), res_img[i])
+            cv2.imwrite(os.path.join(self.output_path, cur_name), cv2.cvtColor(res_img[i], cv2.COLOR_RGB2BGR))
         return res_img

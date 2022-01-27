@@ -111,7 +111,7 @@ class GANLoss(nn.Module):
     that has the same size as the input.
     """
 
-    def __init__(self, gan_mode, target_real_label=1.0, target_fake_label=0.0):
+    def __init__(self, gan_mode, target_real_label = 1.0, target_fake_label = 0.0):
         """ Initialize the GANLoss class.
 
         Parameters:
@@ -171,4 +171,3 @@ class GANLoss(nn.Module):
             else:
                 loss = prediction.mean()
         return loss
-

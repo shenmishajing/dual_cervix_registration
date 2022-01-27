@@ -101,8 +101,7 @@ class VxmDense(LightningModule):
             transformed_source = self.style_transformer(source)
         else:
             transformed_source = source
-        x = torch.cat([torch.mean(x, dim = 1, keepdim = True) for x in [transformed_source, target]], dim = 1)
-        x = self.backbone(x)
+        x = self.backbone(torch.cat([transformed_source, target], dim = 1))
 
         # transform into flow field
         flow_field = self.flow(x)

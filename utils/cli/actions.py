@@ -49,9 +49,9 @@ def deep_update(source, override):
             elif delete_keys:
                 return override
         if 'pre_item' in override:
-            source = override['pre_item'] + source
+            source = (override['pre_item'] if isinstance(override['pre_item'], list) else [override['pre_item']]) + source
         if 'post_item' in override:
-            source = source + override['post_item']
+            source = source + (override['post_item'] if isinstance(override['post_item'], list) else [override['post_item']])
         return source
     return override
 
